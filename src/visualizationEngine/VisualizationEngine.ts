@@ -29,7 +29,7 @@ export default class VisualizationEngine {
     window.addEventListener("pointermove", (e) => this.onDragMove(e));
     window.addEventListener("pointerdown", (e) => this.onPointerDown(e));
 
-    new Gate({ visualizationEngine, x: 200, y: 200, gate: "or" }).init();
+    new Gate({ visualizationEngine, x: 200, y: 200, gate: "and" }).init();
 
     this.ticker.add(() => {
       this.renderer.render(this.stage);

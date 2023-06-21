@@ -3,17 +3,22 @@ import VisualizationEngine from "../VisualizationEngine";
 import { bg, border, stroke } from "@/colors";
 import { adaptEffect, adaptState, unify } from "promethium-js";
 import buildGateBody from "./buildGateBody";
-import { selectionRectangeDimensions } from "./gateDimensions";
+import {
+  gateBodyDimensions,
+  outputTerminalDimensions,
+  selectionRectangeDimensions,
+} from "./gateDimensions";
 import { adjustOpacityOnInteract } from "./utils";
 
 type Gates = ["and", "or", "not", "nand", "nor", "xor", "xnor"];
 
-interface GateOptions {
+export type GateOptions = {
   visualizationEngine: VisualizationEngine;
   x: number;
   y: number;
   gate: Gates[number];
-}
+};
+
 export default class Gate extends Container {
   isBeingHoveredOver = unify(adaptState(false));
   isSelected = unify(adaptState(false));
@@ -44,7 +49,7 @@ export default class Gate extends Container {
       if (!this.overridingSelect()) {
         if (this.isSelected()) {
           this.selectionRectange.lineStyle({
-            width: selectionRectangeDimensions.selectionRectangeStrokeWidth,
+            width: selectionRectangeDimensions.strokeWidth,
             color: border[11],
             alignment: 1,
           });
@@ -54,32 +59,37 @@ export default class Gate extends Container {
       this.selectionRectange
         .beginFill(bg[10], 0.01)
         .drawRect(
-          this.inputTerminals.x -
-            selectionRectangeDimensions.selectionRectangeOriginDelta_X,
-          this.inputTerminals.y -
-            selectionRectangeDimensions.selectionRectangeOriginDelta_Y,
-          width + selectionRectangeDimensions.selectionRectangeWidthDelta,
-          height + selectionRectangeDimensions.selectionRectangeHeightDelta
+          this.inputTerminals.x - selectionRectangeDimensions.originDelta_X,
+          this.inputTerminals.y - selectionRectangeDimensions.originDelta_Y,
+          width + selectionRectangeDimensions.widthDelta,
+          height + selectionRectangeDimensions.heightDelta
         );
     });
   }
 
   buildGateTerminals() {
     this.inputTerminals.x = -10;
-    this.inputTerminals.y = -50;
+    this.inputTerminals.y = -25;
     this.inputTerminals
       .lineStyle({ width: 2, color: stroke[10] })
       .moveTo(2, 0)
       .lineTo(2, 100)
       .beginFill(stroke[10])
-      .lineStyle({ width: 0 })
-      .drawCircle(2, 0, 2)
-      .drawCircle(2, 10, 2)
-      .drawCircle(2, 20, 2)
-      .drawCircle(2, 30, 2)
-      .drawCircle(2, 40, 2)
-      .drawCircle(2, 50, 2);
+      .lineStyle({ width: 0 });
+    for (let i = 0; i <= 100; i = i + 10) {
+      this.inputTerminals.drawCircle(2, i, 2);
+    }
     adaptEffect(() => adjustOpacityOnInteract(this, "inputTerminals"));
+
+    this.outputTerminal.beginFill(stroke[10]);
+    const circle_Y = this.gate === "not" ? "midPoint_Y_not" : "midPoint_Y";
+    this.outputTerminal.drawCircle(
+      gateBodyDimensions.end_X +
+        outputTerminalDimensions[`delta_X_${this.gate}`],
+      gateBodyDimensions[circle_Y],
+      2
+    );
+    adaptEffect(() => adjustOpacityOnInteract(this, "outputTerminal"));
   }
 
   dragStart() {
@@ -120,6 +130,7 @@ export default class Gate extends Container {
   initGateTerminals() {
     this.buildGateTerminals();
     this.addChild(this.inputTerminals);
+    this.addChild(this.outputTerminal);
   }
 
   onPointerDown() {

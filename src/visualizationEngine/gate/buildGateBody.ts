@@ -7,112 +7,123 @@ import { adjustOpacityOnInteract } from "./utils";
 const gateBodyBuilderFns = {
   and: (gate: Gate) => {
     gate.gateBody
-      .lineStyle({
-        width: gateBodyDimensions.gateStrokeWidth,
-        color: stroke[10],
-      })
-      .moveTo(
-        gateBodyDimensions.gateBodyOrigin_X,
-        gateBodyDimensions.gateBodyOrigin_Y
-      )
-      .lineTo(
-        gateBodyDimensions.gateBodyMidPoint_X,
-        gateBodyDimensions.gateBodyOrigin_Y
-      )
+      .lineTo(gateBodyDimensions.midPoint_X, gateBodyDimensions.origin_Y)
       .bezierCurveTo(
-        gateBodyDimensions.gateBodyMidPoint_X +
-          gateBodyDimensions.andGateBodyProtrusionDelta_X,
-        gateBodyDimensions.gateBodyOrigin_Y,
-        gateBodyDimensions.gateBodyMidPoint_X +
-          gateBodyDimensions.andGateBodyProtrusionDelta_X,
-        gateBodyDimensions.gateBodyEnd_Y,
-        gateBodyDimensions.gateBodyMidPoint_X,
-        gateBodyDimensions.gateBodyEnd_Y
+        gateBodyDimensions.midPoint_X +
+          gateBodyDimensions.protrusionDelta_X_and,
+        gateBodyDimensions.origin_Y,
+        gateBodyDimensions.midPoint_X +
+          gateBodyDimensions.protrusionDelta_X_and,
+        gateBodyDimensions.end_Y,
+        gateBodyDimensions.midPoint_X,
+        gateBodyDimensions.end_Y
       )
-      .lineTo(
-        gateBodyDimensions.gateBodyOrigin_X,
-        gateBodyDimensions.gateBodyEnd_Y
-      )
-      .lineTo(
-        gateBodyDimensions.gateBodyOrigin_X,
-        gateBodyDimensions.gateBodyOrigin_Y
-      );
-    adaptEffect(() => adjustOpacityOnInteract(gate, "gateBody"));
+      .lineTo(gateBodyDimensions.origin_X, gateBodyDimensions.end_Y)
+      .lineTo(gateBodyDimensions.origin_X, gateBodyDimensions.origin_Y);
+
+    return gate.gateBody;
   },
   // displacement parameter is used here to enable proper rendering of `selectionRectange` on the xor gate
   or: (gate: Gate, xDisplacement?: number) => {
     gate.gateBody
-      .lineStyle({ width: 2, color: stroke[10] })
+      .quadraticCurveTo(
+        gateBodyDimensions.frontProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.origin_Y,
+        gateBodyDimensions.end_X + (xDisplacement || 0),
+        gateBodyDimensions.midPoint_Y
+      )
       .moveTo(
-        gateBodyDimensions.gateBodyOrigin_X + (xDisplacement || 0),
-        gateBodyDimensions.gateBodyOrigin_Y
+        gateBodyDimensions.origin_X + (xDisplacement || 0),
+        gateBodyDimensions.end_Y
       )
       .quadraticCurveTo(
-        gateBodyDimensions.orGateBodyFrontProtrusionDelta_X +
-          (xDisplacement || 0),
-        gateBodyDimensions.gateBodyOrigin_Y,
-        gateBodyDimensions.gateBodyEnd_X + (xDisplacement || 0),
-        gateBodyDimensions.gateBodyMidPoint_Y
+        gateBodyDimensions.frontProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.end_Y,
+        gateBodyDimensions.end_X + (xDisplacement || 0),
+        gateBodyDimensions.midPoint_Y
       )
       .moveTo(
-        gateBodyDimensions.gateBodyOrigin_X + (xDisplacement || 0),
-        gateBodyDimensions.gateBodyEnd_Y
-      )
-      .quadraticCurveTo(
-        gateBodyDimensions.orGateBodyFrontProtrusionDelta_X +
-          (xDisplacement || 0),
-        gateBodyDimensions.gateBodyEnd_Y,
-        gateBodyDimensions.gateBodyEnd_X + (xDisplacement || 0),
-        gateBodyDimensions.gateBodyMidPoint_Y
-      )
-      .moveTo(
-        gateBodyDimensions.gateBodyOrigin_X + (xDisplacement || 0),
-        gateBodyDimensions.gateBodyOrigin_Y
+        gateBodyDimensions.origin_X + (xDisplacement || 0),
+        gateBodyDimensions.origin_Y
       )
       .bezierCurveTo(
-        gateBodyDimensions.orGateBodyBackProtrusionDelta_X +
-          (xDisplacement || 0),
-        gateBodyDimensions.gateBodyOrigin_Y +
-          gateBodyDimensions.orGateBodyBackProtrusionDelta_Y,
-        gateBodyDimensions.orGateBodyBackProtrusionDelta_X +
-          (xDisplacement || 0),
-        gateBodyDimensions.gateBodyEnd_Y -
-          gateBodyDimensions.orGateBodyBackProtrusionDelta_Y,
-        gateBodyDimensions.gateBodyOrigin_X + (xDisplacement || 0),
-        gateBodyDimensions.gateBodyEnd_Y
+        gateBodyDimensions.backProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.origin_Y +
+          gateBodyDimensions.backProtrusionDelta_Y_or,
+        gateBodyDimensions.backProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.end_Y - gateBodyDimensions.backProtrusionDelta_Y_or,
+        gateBodyDimensions.origin_X + (xDisplacement || 0),
+        gateBodyDimensions.end_Y
       );
-    adaptEffect(() => adjustOpacityOnInteract(gate, "gateBody"));
+
     return gate.gateBody;
   },
-  not: () => {},
-  nand: () => {},
-  nor: () => {},
-  xor: (gate: Gate) => {
-    gate.gateBody.moveTo(
-      gateBodyDimensions.gateBodyOrigin_X +
-        gateBodyDimensions.xorGateBodyDisplacement_X,
-      gateBodyDimensions.gateBodyOrigin_Y
-    );
-    gateBodyBuilderFns
-      .or(gate, gateBodyDimensions.xorGateBodyDisplacement_X)
-      .moveTo(
-        gateBodyDimensions.gateBodyOrigin_X,
-        gateBodyDimensions.gateBodyOrigin_Y
-      )
-      .bezierCurveTo(
-        gateBodyDimensions.orGateBodyBackProtrusionDelta_X,
-        gateBodyDimensions.gateBodyOrigin_Y +
-          gateBodyDimensions.orGateBodyBackProtrusionDelta_Y,
-        gateBodyDimensions.orGateBodyBackProtrusionDelta_X,
-        gateBodyDimensions.gateBodyEnd_Y -
-          gateBodyDimensions.orGateBodyBackProtrusionDelta_Y,
-        gateBodyDimensions.gateBodyOrigin_X,
-        gateBodyDimensions.gateBodyEnd_Y
+  not: (gate: Gate) => {
+    gate.gateBody
+      .lineTo(gateBodyDimensions.end_X_not, gateBodyDimensions.midPoint_Y_not)
+      .lineTo(gateBodyDimensions.origin_X, gateBodyDimensions.end_Y_not)
+      .lineTo(gateBodyDimensions.origin_X, gateBodyDimensions.origin_Y)
+      .drawCircle(
+        gateBodyDimensions.end_X_not +
+          gateBodyDimensions.negateCircleDelta_X_not,
+        gateBodyDimensions.midPoint_Y_not,
+        gateBodyDimensions.negateCircleRadius
       );
   },
-  xnor: () => {},
+  nand: (gate: Gate) => {
+    gateBodyBuilderFns
+      .and(gate)
+      .drawCircle(
+        gateBodyDimensions.end_X + gateBodyDimensions.negateCircleDelta_X_nand,
+        gateBodyDimensions.midPoint_Y,
+        gateBodyDimensions.negateCircleRadius
+      );
+  },
+  nor: (gate: Gate) => {
+    gateBodyBuilderFns
+      .or(gate)
+      .drawCircle(
+        gateBodyDimensions.end_X + gateBodyDimensions.negateCircleDelta_X_nor,
+        gateBodyDimensions.midPoint_Y,
+        gateBodyDimensions.negateCircleRadius
+      );
+  },
+  xor: (gate: Gate) => {
+    gate.gateBody.moveTo(
+      gateBodyDimensions.origin_X + gateBodyDimensions.displacement_X_xor,
+      gateBodyDimensions.origin_Y
+    );
+    gateBodyBuilderFns
+      .or(gate, gateBodyDimensions.displacement_X_xor)
+      .moveTo(gateBodyDimensions.origin_X, gateBodyDimensions.origin_Y)
+      .bezierCurveTo(
+        gateBodyDimensions.backProtrusionDelta_X_or,
+        gateBodyDimensions.origin_Y +
+          gateBodyDimensions.backProtrusionDelta_Y_or,
+        gateBodyDimensions.backProtrusionDelta_X_or,
+        gateBodyDimensions.end_Y - gateBodyDimensions.backProtrusionDelta_Y_or,
+        gateBodyDimensions.origin_X,
+        gateBodyDimensions.end_Y
+      );
+
+    return gate.gateBody;
+  },
+  xnor: (gate: Gate) => {
+    gateBodyBuilderFns
+      .xor(gate)
+      .drawCircle(
+        gateBodyDimensions.end_X + gateBodyDimensions.negateCircleDelta_X_xnor,
+        gateBodyDimensions.midPoint_Y,
+        gateBodyDimensions.negateCircleRadius
+      );
+  },
 };
 
 export default function buildGateBody(gate: Gate) {
+  gate.gateBody.lineStyle({
+    width: gateBodyDimensions.strokeWidth,
+    color: stroke[10],
+  });
   gateBodyBuilderFns[gate.gate](gate);
+  adaptEffect(() => adjustOpacityOnInteract(gate, "gateBody"));
 }
