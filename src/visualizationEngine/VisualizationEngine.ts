@@ -1,5 +1,5 @@
-import { Container, Renderer, Ticker } from "pixi.js";
-import Gate from "./Gate";
+import { Container, Graphics, Renderer, Ticker } from "pixi.js";
+import Gate from "./gate/Gate";
 import { visualizationEngine } from "@/App";
 
 interface VisualizationEngineComponents {
@@ -17,6 +17,8 @@ export default class VisualizationEngine {
   dragTargetOrigin: { x: number; y: number } = { x: 0, y: 0 }; // for tracking the beginning position of the `dragTarget` when dragging
 
   init() {
+    Graphics.curves.maxLength = 4;
+
     const resize = () => {
       const canvas = this.renderer.view as HTMLCanvasElement;
       const _w = canvas.offsetWidth;
@@ -27,7 +29,7 @@ export default class VisualizationEngine {
     window.addEventListener("pointermove", (e) => this.onDragMove(e));
     window.addEventListener("pointerdown", (e) => this.onPointerDown(e));
 
-    new Gate(visualizationEngine, 200, 200).init();
+    new Gate({ visualizationEngine, x: 200, y: 200, gate: "or" }).init();
 
     this.ticker.add(() => {
       this.renderer.render(this.stage);

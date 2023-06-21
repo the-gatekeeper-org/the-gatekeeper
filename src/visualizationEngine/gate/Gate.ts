@@ -1,8 +1,19 @@
 import { Graphics, Container } from "pixi.js";
-import VisualizationEngine from "./VisualizationEngine";
-import { bg, text, border } from "@/colors";
+import VisualizationEngine from "../VisualizationEngine";
+import { bg, border, stroke } from "@/colors";
 import { adaptEffect, adaptState, unify } from "promethium-js";
+import buildGateBody from "./buildGateBody";
+import { selectionRectangeDimensions } from "./gateDimensions";
+import { adjustOpacityOnInteract } from "./utils";
 
+type Gates = ["and", "or", "not", "nand", "nor", "xor", "xnor"];
+
+interface GateOptions {
+  visualizationEngine: VisualizationEngine;
+  x: number;
+  y: number;
+  gate: Gates[number];
+}
 export default class Gate extends Container {
   isBeingHoveredOver = unify(adaptState(false));
   isSelected = unify(adaptState(false));
@@ -10,51 +21,65 @@ export default class Gate extends Container {
   overridingSelect = unify(adaptState(false)); // for tracking whether the `Gate` is being dragged so that we override the showing of the `selectionRectangle`
   gateBody: Graphics = new Graphics();
   selectionRectange: Graphics = new Graphics();
+  inputTerminals: Graphics = new Graphics();
+  outputTerminal: Graphics = new Graphics();
   visualizationEngine: VisualizationEngine;
+  gate: GateOptions["gate"];
 
-  constructor(visualizationEngine: VisualizationEngine, x: number, y: number) {
+  constructor(options: GateOptions) {
     super();
-    this.visualizationEngine = visualizationEngine;
-    this.x = x;
-    this.y = y;
+    this.visualizationEngine = options.visualizationEngine;
+    this.x = options.x;
+    this.y = options.y;
+    this.gate = options.gate;
   }
 
   buildGateBody() {
-    this.gateBody.lineStyle({ width: 2, color: text[10] });
-    this.gateBody.lineTo(25, 0);
-    this.gateBody.bezierCurveTo(60, 0, 60, 50, 25, 50);
-    this.gateBody.lineTo(0, 50);
-    this.gateBody.closePath();
-    adaptEffect(() => {
-      if (this.overridingSelect() || this.isBeingHoveredOver()) {
-        this.gateBody.alpha = 0.5;
-      } else {
-        this.gateBody.alpha = 1;
-      }
-    });
+    buildGateBody(this);
   }
 
   buildSelectionRectangle() {
     adaptEffect(() => {
       this.selectionRectange.clear();
-      this.selectionRectange.beginFill(bg[10], 0.01);
       if (!this.overridingSelect()) {
         if (this.isSelected()) {
           this.selectionRectange.lineStyle({
-            width: 1,
+            width: selectionRectangeDimensions.selectionRectangeStrokeWidth,
             color: border[11],
             alignment: 1,
           });
         }
       }
       const { width, height } = this.getBounds();
-      this.selectionRectange.drawRect(
-        this.gateBody.x - 3,
-        this.gateBody.y - 3,
-        width + 4,
-        height + 4
-      );
+      this.selectionRectange
+        .beginFill(bg[10], 0.01)
+        .drawRect(
+          this.inputTerminals.x -
+            selectionRectangeDimensions.selectionRectangeOriginDelta_X,
+          this.inputTerminals.y -
+            selectionRectangeDimensions.selectionRectangeOriginDelta_Y,
+          width + selectionRectangeDimensions.selectionRectangeWidthDelta,
+          height + selectionRectangeDimensions.selectionRectangeHeightDelta
+        );
     });
+  }
+
+  buildGateTerminals() {
+    this.inputTerminals.x = -10;
+    this.inputTerminals.y = -50;
+    this.inputTerminals
+      .lineStyle({ width: 2, color: stroke[10] })
+      .moveTo(2, 0)
+      .lineTo(2, 100)
+      .beginFill(stroke[10])
+      .lineStyle({ width: 0 })
+      .drawCircle(2, 0, 2)
+      .drawCircle(2, 10, 2)
+      .drawCircle(2, 20, 2)
+      .drawCircle(2, 30, 2)
+      .drawCircle(2, 40, 2)
+      .drawCircle(2, 50, 2);
+    adaptEffect(() => adjustOpacityOnInteract(this, "inputTerminals"));
   }
 
   dragStart() {
@@ -70,6 +95,7 @@ export default class Gate extends Container {
   init() {
     this.visualizationEngine.stage.addChild(this);
     this.initGateBody();
+    this.initGateTerminals();
     this.initSelectionRectange();
   }
 
@@ -89,6 +115,11 @@ export default class Gate extends Container {
     this.selectionRectange.eventMode = "static";
     this.selectionRectange.cursor = "pointer";
     this.addChild(this.selectionRectange);
+  }
+
+  initGateTerminals() {
+    this.buildGateTerminals();
+    this.addChild(this.inputTerminals);
   }
 
   onPointerDown() {

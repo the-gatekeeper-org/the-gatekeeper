@@ -9,6 +9,12 @@ export const bg = {
 export const text = {
   10: "#ffffff",
 };
+export const stroke = {
+  ...text,
+};
+export const fill = {
+  10: "295FB0",
+};
 export const border = {
   10: "#7d7d7d",
   11: "#2988B0",
