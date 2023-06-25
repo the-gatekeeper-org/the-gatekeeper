@@ -2,14 +2,14 @@ export const gateBodyDimensions = {
   strokeWidth: 2,
   origin_X: 0,
   origin_Y: 0,
-  midPoint_X: 25,
-  midPoint_Y_not: 12,
-  midPoint_Y: 25,
-  end_X: 50,
-  end_X_not: 35,
-  end_Y: 50,
-  end_Y_not: 25,
-  protrusionDelta_X_and: 35,
+  midPoint_X: 20,
+  midPoint_Y_not: 10,
+  midPoint_Y: 20,
+  end_X: 40,
+  end_X_not: 26,
+  end_Y: 40,
+  end_Y_not: 20,
+  protrusionDelta_X_and: 29,
   frontProtrusionDelta_X_or: 35,
   backProtrusionDelta_X_or: 15,
   backProtrusionDelta_Y_or: 10,
@@ -24,12 +24,19 @@ export const gateBodyDimensions = {
 export const selectionRectangeDimensions = {
   strokeWidth: 2,
   originDelta_X: 2,
-  originDelta_Y: 4,
+  originDelta_Y: 3,
   widthDelta: 4,
   heightDelta: 4,
 } as const;
 
-export const inputTerminalDimensions = {} as const;
+export const inputTerminalDimensions = {
+  strokeWidth: 2,
+  displacement_X: -10,
+  origin_X: 2,
+  origin_Y: 0,
+  terminalGap: 10,
+  terminalRadius: 2,
+} as const;
 
 export const outputTerminalDimensions = {
   delta_X_and: 4,

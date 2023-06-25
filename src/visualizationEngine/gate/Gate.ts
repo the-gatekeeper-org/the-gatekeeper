@@ -1,10 +1,11 @@
 import { Graphics, Container } from "pixi.js";
 import VisualizationEngine from "../VisualizationEngine";
 import { bg, border, stroke } from "@/colors";
-import { adaptEffect, adaptState, unify } from "promethium-js";
+import { UnifiedState, adaptEffect, adaptState, unify } from "promethium-js";
 import buildGateBody from "./buildGateBody";
 import {
   gateBodyDimensions,
+  inputTerminalDimensions,
   outputTerminalDimensions,
   selectionRectangeDimensions,
 } from "./gateDimensions";
@@ -17,6 +18,7 @@ export type GateOptions = {
   x: number;
   y: number;
   gate: Gates[number];
+  noOfInputs: number;
 };
 
 export default class Gate extends Container {
@@ -30,6 +32,7 @@ export default class Gate extends Container {
   outputTerminal: Graphics = new Graphics();
   visualizationEngine: VisualizationEngine;
   gate: GateOptions["gate"];
+  noOfInputs: UnifiedState<GateOptions["noOfInputs"]>;
 
   constructor(options: GateOptions) {
     super();
@@ -37,6 +40,7 @@ export default class Gate extends Container {
     this.x = options.x;
     this.y = options.y;
     this.gate = options.gate;
+    this.noOfInputs = unify(adaptState(options.noOfInputs));
   }
 
   buildGateBody() {
@@ -55,12 +59,13 @@ export default class Gate extends Container {
           });
         }
       }
+      const Y = this.noOfInputs() >= 6 ? this.inputTerminals.y : 0; // if the input terminals are lower than the gateBody, then the `selectionRectange` should be at the level of the gateBody instead (this occurs when the `noOfInputs` is less than 6)
       const { width, height } = this.getBounds();
       this.selectionRectange
         .beginFill(bg[10], 0.01)
         .drawRect(
           this.inputTerminals.x - selectionRectangeDimensions.originDelta_X,
-          this.inputTerminals.y - selectionRectangeDimensions.originDelta_Y,
+          Y - selectionRectangeDimensions.originDelta_Y,
           width + selectionRectangeDimensions.widthDelta,
           height + selectionRectangeDimensions.heightDelta
         );
@@ -68,16 +73,58 @@ export default class Gate extends Container {
   }
 
   buildGateTerminals() {
-    this.inputTerminals.x = -10;
-    this.inputTerminals.y = -25;
-    this.inputTerminals
-      .lineStyle({ width: 2, color: stroke[10] })
-      .moveTo(2, 0)
-      .lineTo(2, 100)
-      .beginFill(stroke[10])
-      .lineStyle({ width: 0 });
-    for (let i = 0; i <= 100; i = i + 10) {
-      this.inputTerminals.drawCircle(2, i, 2);
+    this.inputTerminals.x = inputTerminalDimensions.displacement_X;
+    const isNoOfInputsOdd = () => this.noOfInputs() % 2 !== 0;
+    if (isNoOfInputsOdd()) {
+      this.inputTerminals.y =
+        -5 * this.noOfInputs() + 2.5 * inputTerminalDimensions.terminalGap;
+      const end_Y =
+        (this.noOfInputs() - 1) * inputTerminalDimensions.terminalGap;
+      this.inputTerminals
+        .lineStyle({
+          width: inputTerminalDimensions.strokeWidth,
+          color: stroke[10],
+        })
+        .moveTo(
+          inputTerminalDimensions.origin_X,
+          inputTerminalDimensions.origin_Y
+        )
+        .lineTo(inputTerminalDimensions.origin_X, end_Y)
+        .beginFill(stroke[10])
+        .lineStyle({ width: 0 });
+      for (let i = 0; i < this.noOfInputs(); i++) {
+        this.inputTerminals.drawCircle(
+          inputTerminalDimensions.origin_X,
+          i * inputTerminalDimensions.terminalGap,
+          inputTerminalDimensions.terminalRadius
+        );
+      }
+    } else {
+      this.inputTerminals.y =
+        -5 * this.noOfInputs() + 2 * inputTerminalDimensions.terminalGap;
+      const end_Y = this.noOfInputs() * inputTerminalDimensions.terminalGap;
+      this.inputTerminals
+        .lineStyle({
+          width: inputTerminalDimensions.strokeWidth,
+          color: stroke[10],
+        })
+        .moveTo(
+          inputTerminalDimensions.origin_X,
+          inputTerminalDimensions.origin_Y
+        )
+        .lineTo(inputTerminalDimensions.origin_X, end_Y)
+        .beginFill(stroke[10])
+        .lineStyle({ width: 0 });
+      for (let i = 0; i < this.noOfInputs() + 1; i++) {
+        const isMiddleInput = () => i === this.noOfInputs() / 2;
+        if (!isMiddleInput())
+          // don't draw the middle input terminal for an even number of input terminals
+          this.inputTerminals.drawCircle(
+            inputTerminalDimensions.origin_X,
+            i * inputTerminalDimensions.terminalGap,
+            inputTerminalDimensions.terminalRadius
+          );
+      }
     }
     adaptEffect(() => adjustOpacityOnInteract(this, "inputTerminals"));
 

@@ -1,12 +1,12 @@
 import { Container, Graphics, Renderer, Ticker } from "pixi.js";
 import Gate from "./gate/Gate";
-import { visualizationEngine } from "@/App";
+import { GateOptions } from "./gate/Gate";
 
-interface VisualizationEngineComponents {
+type VisualizationEngineComponents = {
   renderer: Renderer;
   stage: Container;
   ticker: Ticker;
-}
+};
 
 export default class VisualizationEngine {
   renderer: Renderer = new Renderer();
@@ -29,7 +29,12 @@ export default class VisualizationEngine {
     window.addEventListener("pointermove", (e) => this.onDragMove(e));
     window.addEventListener("pointerdown", (e) => this.onPointerDown(e));
 
-    new Gate({ visualizationEngine, x: 200, y: 200, gate: "and" }).init();
+    this.addGate({
+      x: 200,
+      y: 200,
+      gate: "xnor",
+      noOfInputs: 2,
+    });
 
     this.ticker.add(() => {
       this.renderer.render(this.stage);
@@ -42,6 +47,11 @@ export default class VisualizationEngine {
     component: VisualizationEngineComponents[T]
   ) {
     (this as VisualizationEngineComponents)[componentName] = component;
+  }
+
+  addGate(options: Omit<GateOptions, "visualizationEngine">) {
+    const gate = new Gate({ visualizationEngine: this, ...options });
+    gate.init();
   }
 
   onDragMove(e: PointerEvent) {
