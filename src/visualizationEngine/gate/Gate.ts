@@ -31,7 +31,7 @@ export type GateOptions = {
 };
 
 // TODO: Protect instance variables as with instance methods
-export default class Gate extends Container {
+export class Gate extends Container {
   dragStarted = unify(adaptState(false));
   isBeingDragged = unify(adaptState(false));
   gateBody = new Graphics();
@@ -170,14 +170,22 @@ export default class Gate extends Container {
     });
   }
 
-  private dragStart() {
-    this.dragStarted(true);
-    this.visualizationEngine.dragTarget = this;
+  detonate() {
+    this.gateBody.destroy();
+    this.inputTerminals.destroy();
+    this.outputTerminal.destroy();
+    this.selectionRectange.destroy();
+    this.destroy();
   }
 
   private dragEnd() {
     this.dragStarted(false);
     this.visualizationEngine.dragTarget = null;
+  }
+
+  private dragStart() {
+    this.dragStarted(true);
+    this.visualizationEngine.dragTarget = this;
   }
 
   init() {
@@ -194,6 +202,12 @@ export default class Gate extends Container {
     this.addChild(this.gateBody);
   }
 
+  private initGateTerminals() {
+    this.buildGateTerminals();
+    this.addChild(this.inputTerminals);
+    this.addChild(this.outputTerminal);
+  }
+
   private initSelectionRectange() {
     this.buildSelectionRectangle();
     this.selectionRectange
@@ -203,20 +217,6 @@ export default class Gate extends Container {
     this.selectionRectange.eventMode = "static";
     this.selectionRectange.cursor = "pointer";
     this.addChild(this.selectionRectange);
-  }
-
-  private initGateTerminals() {
-    this.buildGateTerminals();
-    this.addChild(this.inputTerminals);
-    this.addChild(this.outputTerminal);
-  }
-
-  detonate() {
-    this.gateBody.destroy();
-    this.inputTerminals.destroy();
-    this.outputTerminal.destroy();
-    this.selectionRectange.destroy();
-    this.destroy();
   }
 
   private onPointerDown() {

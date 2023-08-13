@@ -10,7 +10,7 @@ export type GridOptions = {
   gridGap: number;
 };
 
-export default class Grid extends Graphics {
+export class Grid extends Graphics {
   gridWidth: UnifiedState<number>;
   gridHeight: UnifiedState<number>;
   gridGap: number;

@@ -1,5 +1,5 @@
 import Orchestrator from "@/entities/Orchestrator";
-import Gate from "./Gate";
+import { Gate } from "./Gate";
 import { inputTerminalDimensions } from "./dimensions";
 
 export function adjustOpacityOnInteract(

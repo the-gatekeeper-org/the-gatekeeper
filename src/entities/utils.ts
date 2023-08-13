@@ -1,18 +1,23 @@
-import { IPointData } from "pixi.js";
-import { State } from "promethium-js";
+import { DisplayObject, IPointData } from "pixi.js";
+import { Getter, State } from "promethium-js";
 import { elementInstances } from "./sharedEntities";
 
 export type ElementId = `e-${number}`;
 
-export function generateElementId(prefix: "e"): ElementId {
+export function generateElementId(): ElementId {
   const body = Math.floor(Math.random() * Math.pow(10, 17));
-  return `${prefix}-${body}`;
+  return `e-${body}`;
 }
 
 export function checkForHoverOverConnectionPointInConnectionPointsEntries(
   hoverPoint: IPointData,
   connectionPointsEntries: [string, State<[] | IPointData[]>][]
 ) {
+  let returnData: [boolean, Getter<DisplayObject> | null, IPointData | null] = [
+    false,
+    null,
+    null,
+  ];
   for (let i = 0; i < connectionPointsEntries.length; i++) {
     const [elementId, [connectionPoints, _]] = connectionPointsEntries[i];
     const elementInstance = elementInstances.adaptParticle(
@@ -25,8 +30,14 @@ export function checkForHoverOverConnectionPointInConnectionPointsEntries(
         hoverPoint.x === globalConnectionPoint.x &&
         hoverPoint.y === globalConnectionPoint.y
       ) {
-        return true;
+        returnData = [true, elementInstance, connectionPoint];
+
+        return returnData;
       }
     }
   }
+
+  return returnData;
 }
+
+export function checkForHoverOverConnectionPointInConductorConnectionPointsEntries() {}

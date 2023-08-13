@@ -1,14 +1,16 @@
 import { Container, Graphics, IPointData, Renderer, Ticker } from "pixi.js";
-import Gate from "./gate/Gate";
-import { GateOptions } from "./gate/Gate";
+import { Gate, GateOptions } from "./gate/Gate";
 import { bg, border } from "@/colors";
-import Grid, { GridOptions } from "./grid/Grid";
+import { Grid, GridOptions } from "./grid/Grid";
 import Orchestrator from "@/entities/Orchestrator";
 import { adaptEffect, adaptState, unify } from "promethium-js";
 import {
   connectionPointSelectionCircleDimensions,
   gridGap,
 } from "./dimensions";
+import { Conductor, ConductorOptions } from "./conductor/Conductor";
+import { round } from "./utils";
+import { conductorPreviewData } from "@/entities/visualizationEntities";
 
 interface GlobalThis {
   __PIXI_STAGE__: Container;
@@ -32,6 +34,32 @@ export default class VisualizationEngine {
 
   constructor() {
     Graphics.curves.maxLength = 4;
+  }
+
+  addConductor(options: Omit<ConductorOptions, "visualizationEngine">) {
+    const conductor = new Conductor({ visualizationEngine: this, ...options });
+    conductor.init();
+    this.stage.addChild(conductor);
+
+    return conductor;
+  }
+
+  private addGate(options: Omit<GateOptions, "visualizationEngine">) {
+    const gate = new Gate({ visualizationEngine: this, ...options });
+    const { id, gateType } = options;
+    Orchestrator.actions.addGate({ id, gate, gateType });
+    gate.init();
+    this.stage.addChild(gate);
+
+    return gate;
+  }
+
+  private addGrid(options: GridOptions) {
+    const grid = new Grid(options);
+    grid.init();
+    this.stage.addChild(grid);
+
+    return grid;
   }
 
   private buildConnectionPointSelectionCircle() {
@@ -64,11 +92,13 @@ export default class VisualizationEngine {
         backgroundColor: bg["primary-dark"],
       });
     }
+
     // for debugging purposes (PixiJS Devtools)
     if (import.meta.env.DEV) {
       (globalThis as unknown as GlobalThis).__PIXI_STAGE__ = this.stage;
       (globalThis as unknown as GlobalThis).__PIXI_RENDERER__ = this.renderer;
     }
+
     const grid = this.addGrid({
       x: 0,
       y: 0,
@@ -76,6 +106,7 @@ export default class VisualizationEngine {
       gridHeight: this.renderer.height,
       gridGap,
     });
+
     const resize = () => {
       const canvas = this.renderer.view as HTMLCanvasElement;
       const _w = canvas.offsetWidth;
@@ -83,12 +114,19 @@ export default class VisualizationEngine {
       this.renderer.resize(_w, _h);
       grid.resize(this.renderer.width, this.renderer.height);
     };
-    this.initConnectionPointSelectionCircle();
+
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", (e) => this.onPointerMove(e));
     this.renderer.view.addEventListener?.("pointerdown", (e) =>
       this.onPointerDown(e as PointerEvent)
     );
+    this.renderer.view.addEventListener?.("pointerup", () =>
+      this.onPointerUp()
+    );
+
+    this.initConnectionPointSelectionCircle();
+    this.initConductorPreview();
+
     this.ticker.add(() => {
       this.renderer.render(this.stage);
     });
@@ -102,22 +140,9 @@ export default class VisualizationEngine {
     this.stage.addChild(this.connectionPointSelectionCircle);
   }
 
-  private addGate(options: Omit<GateOptions, "visualizationEngine">) {
-    const gate = new Gate({ visualizationEngine: this, ...options });
-    const { id, gateType } = options;
-    Orchestrator.actions.addGate({ id, gate, gateType });
-    gate.init();
-    this.stage.addChild(gate);
-
-    return gate;
-  }
-
-  private addGrid(options: GridOptions) {
-    const grid = new Grid(options);
-    grid.init();
-    this.stage.addChild(grid);
-
-    return grid;
+  private initConductorPreview() {
+    Conductor.buildConductorPreview();
+    this.stage.addChild(Conductor.conductorPreview);
   }
 
   private moveDragTarget(e: PointerEvent) {
@@ -128,41 +153,98 @@ export default class VisualizationEngine {
       const newDragTarget_y =
         this.dragTargetOrigin.y + (e.screenY - this.dragOrigin.y);
       // TODO: transfer math into gate
-      this.dragTarget.x = Math.round(newDragTarget_x / gridGap) * gridGap;
-      this.dragTarget.y = Math.round(newDragTarget_y / gridGap) * gridGap;
+      this.dragTarget.x = round(newDragTarget_x);
+      this.dragTarget.y = round(newDragTarget_y);
     }
   }
 
   private onPointerDown(e: PointerEvent) {
     this.prepareToDragTarget(e);
-    if (this.optionsOfNextGateToAdd) {
+    if (this.optionsOfNextGateToAdd !== null) {
       this.addGate({
         // TODO: transfer math into gate
-        x: Math.round(e.x / gridGap) * gridGap - gridGap,
-        y: Math.round(e.y / gridGap) * gridGap - gridGap,
+        x: round(e.x) - gridGap,
+        y: round(e.y) - gridGap,
         ...this.optionsOfNextGateToAdd,
       });
     }
     this.optionsOfNextGateToAdd = null;
     Orchestrator.actions.turnOffButtonSelections();
     Orchestrator.actions.turnOffAllElementSelections();
+    if (this.connectionPointIsBeingHoveredOver()) {
+      const pointerCoordinates = { x: round(e.x), y: round(e.y) };
+      Orchestrator.actions.updateConductorPreview({
+        previousCoordinates: pointerCoordinates,
+        currentCoordinates: pointerCoordinates,
+        startingCoordinates: this.connectionPointSelectionCirclePosition(),
+        isBeingDrawn: true,
+      });
+      // TODO: Find a better way to achieve this
+      // use `setTimeout` to ensure that element selections are only turned off after any possible `turnOnElementSelection` operations
+      setTimeout(() => {
+        const conductorPreviewIsBeingDrawn =
+          conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+        if (conductorPreviewIsBeingDrawn) {
+          Orchestrator.actions.turnOffAllElementSelections();
+        }
+      });
+    }
+  }
+
+  private onPointerUp() {
+    const conductorPreviewIsBeingDrawn =
+      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+    if (conductorPreviewIsBeingDrawn) {
+      const coordinates =
+        conductorPreviewData.adaptParticle("coordinates")[0]();
+      const conductorCoordinates_1 = [
+        { x: coordinates.starting!.x, y: coordinates.starting!.y },
+        { x: coordinates.current!.x, y: coordinates.starting!.y },
+      ] as [IPointData, IPointData];
+      const conductorCoordinates_2 = [
+        { x: coordinates.current!.x, y: coordinates.starting!.y },
+        { x: coordinates.current!.x, y: coordinates.current!.y },
+      ] as [IPointData, IPointData];
+      Orchestrator.actions.addConductor(conductorCoordinates_1);
+      Orchestrator.actions.addConductor(conductorCoordinates_2);
+    }
+    Orchestrator.actions.updateConductorPreview({
+      previousCoordinates: null,
+      currentCoordinates: null,
+      startingCoordinates: null,
+      isBeingDrawn: false,
+    });
   }
 
   private onPointerMove(e: PointerEvent) {
-    this.moveDragTarget(e);
-    const connectionPointIsBeingHoveredOver =
+    const [connectionPointIsBeingHoveredOver] =
       Orchestrator.actions.checkForHoverOverConnectionPoint({
-        x: Math.round(e.x / gridGap) * gridGap,
-        y: Math.round(e.y / gridGap) * gridGap,
+        x: round(e.x),
+        y: round(e.y),
       });
-    if (connectionPointIsBeingHoveredOver) {
+    if (connectionPointIsBeingHoveredOver === true) {
       this.connectionPointSelectionCirclePosition({
-        x: Math.round(e.x / gridGap) * gridGap,
-        y: Math.round(e.y / gridGap) * gridGap,
+        x: round(e.x),
+        y: round(e.y),
       });
       this.connectionPointIsBeingHoveredOver(true);
     } else {
       this.connectionPointIsBeingHoveredOver(false);
+    }
+    const conductorPreviewIsBeingDrawn =
+      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+    const conductorPreviewCoordinates =
+      conductorPreviewData.adaptParticle("coordinates")[0]();
+    if (conductorPreviewIsBeingDrawn) {
+      const pointerCoordinates = { x: round(e.x), y: round(e.y) };
+      Orchestrator.actions.updateConductorPreview({
+        previousCoordinates: conductorPreviewCoordinates.current,
+        currentCoordinates: pointerCoordinates,
+        startingCoordinates: conductorPreviewCoordinates.starting,
+        isBeingDrawn: true,
+      });
+    } else {
+      this.moveDragTarget(e);
     }
   }
 
