@@ -10,27 +10,31 @@ import {
 } from "./dimensions";
 import { Conductor, ConductorOptions } from "./conductor/Conductor";
 import { round } from "./utils";
-import { conductorPreviewData } from "@/entities/visualizationEntities";
+import {
+  ConductorConnectionPoints,
+  conductorPreviewData,
+} from "@/entities/visualizationEntities";
+import { CircuitElement } from "./CircuitElement";
 
 interface GlobalThis {
   __PIXI_STAGE__: Container;
   __PIXI_RENDERER__: Renderer;
 }
 
-export default class VisualizationEngine {
-  renderer: Renderer = new Renderer();
-  stage: Container = new Container();
-  ticker: Ticker = new Ticker();
-  dragTarget?: Gate | null; // for tracking the current `DisplayObject` being dragged
+export class VisualizationEngine {
+  connectionPointIsBeingHoveredOver = unify(adaptState(false));
+  connectionPointSelectionCircle = new Graphics();
+  connectionPointSelectionCirclePosition = unify(adaptState({ x: 0, y: 0 }));
   dragOrigin: IPointData = { x: 0, y: 0 }; // for tracking the beginning position of the mouse pointer when dragging
+  dragTarget?: CircuitElement | null; // for tracking the current `DisplayObject` being dragged
   dragTargetOrigin: IPointData = { x: 0, y: 0 }; // for tracking the beginning position of the `dragTarget` when dragging
   optionsOfNextGateToAdd: Pick<
     GateOptions,
     "gateType" | "noOfInputs" | "id"
   > | null = null;
-  connectionPointSelectionCircle = new Graphics();
-  connectionPointIsBeingHoveredOver = unify(adaptState(false));
-  connectionPointSelectionCirclePosition = unify(adaptState({ x: 0, y: 0 }));
+  renderer: Renderer = new Renderer();
+  stage: Container = new Container();
+  ticker: Ticker = new Ticker();
 
   constructor() {
     Graphics.curves.maxLength = 4;
@@ -44,7 +48,7 @@ export default class VisualizationEngine {
     return conductor;
   }
 
-  private addGate(options: Omit<GateOptions, "visualizationEngine">) {
+  protected addGate(options: Omit<GateOptions, "visualizationEngine">) {
     const gate = new Gate({ visualizationEngine: this, ...options });
     const { id, gateType } = options;
     Orchestrator.actions.addGate({ id, gate, gateType });
@@ -54,7 +58,7 @@ export default class VisualizationEngine {
     return gate;
   }
 
-  private addGrid(options: GridOptions) {
+  protected addGrid(options: GridOptions) {
     const grid = new Grid(options);
     grid.init();
     this.stage.addChild(grid);
@@ -62,7 +66,7 @@ export default class VisualizationEngine {
     return grid;
   }
 
-  private buildConnectionPointSelectionCircle() {
+  protected buildConnectionPointSelectionCircle() {
     adaptEffect(() => {
       this.connectionPointSelectionCircle.clear();
       if (this.connectionPointIsBeingHoveredOver()) {
@@ -79,6 +83,64 @@ export default class VisualizationEngine {
         );
       }
     });
+  }
+
+  protected conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(
+    e: PointerEvent
+  ) {
+    const conductorPreviewIsBeingDrawn =
+      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+    const conductorPreviewCoordinates =
+      conductorPreviewData.adaptParticle("coordinates")[0]();
+    if (conductorPreviewIsBeingDrawn) {
+      const pointerCoordinates = { x: round(e.x), y: round(e.y) };
+      Orchestrator.actions.updateConductorPreview({
+        previousCoordinates: conductorPreviewCoordinates.current,
+        currentCoordinates: pointerCoordinates,
+        startingCoordinates: conductorPreviewCoordinates.starting,
+        isBeingDrawn: true,
+      });
+    } else {
+      this.moveDragTarget(e);
+    }
+  }
+
+  protected conditionallyDrawConnectionPointCircle(e: PointerEvent) {
+    const [connectionPointIsBeingHoveredOver] =
+      Orchestrator.actions.checkForHoverOverConnectionPoint({
+        x: round(e.x),
+        y: round(e.y),
+      });
+    if (connectionPointIsBeingHoveredOver === true) {
+      this.connectionPointSelectionCirclePosition({
+        x: round(e.x),
+        y: round(e.y),
+      });
+      this.connectionPointIsBeingHoveredOver(true);
+    } else {
+      this.connectionPointIsBeingHoveredOver(false);
+    }
+  }
+
+  protected conditionallyInitDrawingOfConductorPreviewVisuals(e: PointerEvent) {
+    if (this.connectionPointIsBeingHoveredOver()) {
+      const pointerCoordinates = { x: round(e.x), y: round(e.y) };
+      Orchestrator.actions.updateConductorPreview({
+        previousCoordinates: pointerCoordinates,
+        currentCoordinates: pointerCoordinates,
+        startingCoordinates: this.connectionPointSelectionCirclePosition(),
+        isBeingDrawn: true,
+      });
+      // TODO: Find a better way to achieve this
+      // use `setTimeout` to ensure that element selections are only turned off after any possible `turnOnElementSelection` operations
+      setTimeout(() => {
+        const conductorPreviewIsBeingDrawn =
+          conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+        if (conductorPreviewIsBeingDrawn) {
+          Orchestrator.actions.turnOffAllElementSelections();
+        }
+      });
+    }
   }
 
   init(canvas?: HTMLCanvasElement) {
@@ -114,7 +176,6 @@ export default class VisualizationEngine {
       this.renderer.resize(_w, _h);
       grid.resize(this.renderer.width, this.renderer.height);
     };
-
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", (e) => this.onPointerMove(e));
     this.renderer.view.addEventListener?.("pointerdown", (e) =>
@@ -133,19 +194,19 @@ export default class VisualizationEngine {
     this.ticker.start();
   }
 
-  private initConnectionPointSelectionCircle() {
+  protected initConnectionPointSelectionCircle() {
     this.buildConnectionPointSelectionCircle();
     this.connectionPointSelectionCircle.eventMode = "static";
     this.connectionPointSelectionCircle.cursor = "pointer";
     this.stage.addChild(this.connectionPointSelectionCircle);
   }
 
-  private initConductorPreview() {
+  protected initConductorPreview() {
     Conductor.buildConductorPreview();
     this.stage.addChild(Conductor.conductorPreview);
   }
 
-  private moveDragTarget(e: PointerEvent) {
+  protected moveDragTarget(e: PointerEvent) {
     if (this.dragTarget && this.dragTarget.dragStarted()) {
       this.dragTarget.isBeingDragged(true);
       const newDragTarget_x =
@@ -158,56 +219,17 @@ export default class VisualizationEngine {
     }
   }
 
-  private onPointerDown(e: PointerEvent) {
+  protected onPointerDown(e: PointerEvent) {
     this.prepareToDragTarget(e);
-    if (this.optionsOfNextGateToAdd !== null) {
-      this.addGate({
-        // TODO: transfer math into gate
-        x: round(e.x) - gridGap,
-        y: round(e.y) - gridGap,
-        ...this.optionsOfNextGateToAdd,
-      });
-    }
+    this.spawnNextGate(e);
     this.optionsOfNextGateToAdd = null;
     Orchestrator.actions.turnOffButtonSelections();
     Orchestrator.actions.turnOffAllElementSelections();
-    if (this.connectionPointIsBeingHoveredOver()) {
-      const pointerCoordinates = { x: round(e.x), y: round(e.y) };
-      Orchestrator.actions.updateConductorPreview({
-        previousCoordinates: pointerCoordinates,
-        currentCoordinates: pointerCoordinates,
-        startingCoordinates: this.connectionPointSelectionCirclePosition(),
-        isBeingDrawn: true,
-      });
-      // TODO: Find a better way to achieve this
-      // use `setTimeout` to ensure that element selections are only turned off after any possible `turnOnElementSelection` operations
-      setTimeout(() => {
-        const conductorPreviewIsBeingDrawn =
-          conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
-        if (conductorPreviewIsBeingDrawn) {
-          Orchestrator.actions.turnOffAllElementSelections();
-        }
-      });
-    }
+    this.conditionallyInitDrawingOfConductorPreviewVisuals(e);
   }
 
-  private onPointerUp() {
-    const conductorPreviewIsBeingDrawn =
-      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
-    if (conductorPreviewIsBeingDrawn) {
-      const coordinates =
-        conductorPreviewData.adaptParticle("coordinates")[0]();
-      const conductorCoordinates_1 = [
-        { x: coordinates.starting!.x, y: coordinates.starting!.y },
-        { x: coordinates.current!.x, y: coordinates.starting!.y },
-      ] as [IPointData, IPointData];
-      const conductorCoordinates_2 = [
-        { x: coordinates.current!.x, y: coordinates.starting!.y },
-        { x: coordinates.current!.x, y: coordinates.current!.y },
-      ] as [IPointData, IPointData];
-      Orchestrator.actions.addConductor(conductorCoordinates_1);
-      Orchestrator.actions.addConductor(conductorCoordinates_2);
-    }
+  protected onPointerUp() {
+    this.spawnPreviewConductors();
     Orchestrator.actions.updateConductorPreview({
       previousCoordinates: null,
       currentCoordinates: null,
@@ -216,36 +238,9 @@ export default class VisualizationEngine {
     });
   }
 
-  private onPointerMove(e: PointerEvent) {
-    const [connectionPointIsBeingHoveredOver] =
-      Orchestrator.actions.checkForHoverOverConnectionPoint({
-        x: round(e.x),
-        y: round(e.y),
-      });
-    if (connectionPointIsBeingHoveredOver === true) {
-      this.connectionPointSelectionCirclePosition({
-        x: round(e.x),
-        y: round(e.y),
-      });
-      this.connectionPointIsBeingHoveredOver(true);
-    } else {
-      this.connectionPointIsBeingHoveredOver(false);
-    }
-    const conductorPreviewIsBeingDrawn =
-      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
-    const conductorPreviewCoordinates =
-      conductorPreviewData.adaptParticle("coordinates")[0]();
-    if (conductorPreviewIsBeingDrawn) {
-      const pointerCoordinates = { x: round(e.x), y: round(e.y) };
-      Orchestrator.actions.updateConductorPreview({
-        previousCoordinates: conductorPreviewCoordinates.current,
-        currentCoordinates: pointerCoordinates,
-        startingCoordinates: conductorPreviewCoordinates.starting,
-        isBeingDrawn: true,
-      });
-    } else {
-      this.moveDragTarget(e);
-    }
+  protected onPointerMove(e: PointerEvent) {
+    this.conditionallyDrawConnectionPointCircle(e);
+    this.conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(e);
   }
 
   prepareToAddGate(
@@ -258,7 +253,7 @@ export default class VisualizationEngine {
     };
   }
 
-  private prepareToDragTarget(e: PointerEvent) {
+  protected prepareToDragTarget(e: PointerEvent) {
     this.dragOrigin = {
       x: e.screenX,
       y: e.screenY,
@@ -267,5 +262,39 @@ export default class VisualizationEngine {
       x: this.dragTarget?.x || 0,
       y: this.dragTarget?.y || 0,
     };
+  }
+
+  protected spawnNextGate(e: PointerEvent) {
+    if (this.optionsOfNextGateToAdd !== null) {
+      this.addGate({
+        // TODO: transfer math into gate
+        x: round(e.x) - gridGap,
+        y: round(e.y) - gridGap,
+        ...this.optionsOfNextGateToAdd,
+      });
+    }
+  }
+
+  protected spawnPreviewConductors() {
+    const conductorPreviewIsBeingDrawn =
+      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+    if (conductorPreviewIsBeingDrawn) {
+      const coordinates =
+        conductorPreviewData.adaptParticle("coordinates")[0]();
+      const sharedCoordinates =
+        Conductor.conductorPreviewPrimaryOrientation === "h"
+          ? { x: coordinates.current!.x, y: coordinates.starting!.y }
+          : { x: coordinates.starting!.x, y: coordinates.current!.y };
+      const conductorCoordinates_1 = [
+        { x: coordinates.starting!.x, y: coordinates.starting!.y },
+        sharedCoordinates,
+      ] as ConductorConnectionPoints;
+      const conductorCoordinates_2 = [
+        sharedCoordinates,
+        { x: coordinates.current!.x, y: coordinates.current!.y },
+      ] as ConductorConnectionPoints;
+      Orchestrator.actions.addConductor(conductorCoordinates_1);
+      Orchestrator.actions.addConductor(conductorCoordinates_2);
+    }
   }
 }

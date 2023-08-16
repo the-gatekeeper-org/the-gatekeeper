@@ -1,4 +1,4 @@
-import VisualizationEngine from "@/visualizationEngine/VisualizationEngine";
+import { VisualizationEngine } from "@/visualizationEngine/VisualizationEngine";
 import { ActionEntity } from "promethium-js";
 import {
   conductorOrchestration,

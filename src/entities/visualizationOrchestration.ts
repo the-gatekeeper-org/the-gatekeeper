@@ -1,8 +1,8 @@
 import Orchestrator, { visualizationEngine } from "./Orchestrator";
 import {
-  ElementId,
+  CircuitElementId,
   checkForHoverOverConnectionPointInConnectionPointsEntries,
-  generateElementId,
+  generateCircuitElementId,
 } from "./utils";
 import { Gate, GateOptions } from "@/visualizationEngine/gate/Gate";
 import {
@@ -14,6 +14,7 @@ import {
 } from "./visualizationEntities";
 import { elementTypes, elementInstances } from "./sharedEntities";
 import { IPointData } from "pixi.js";
+import { conductorSizeIsValid } from "@/visualizationEngine/conductor/utils";
 
 export const gateOrchestration = {
   addGate({
@@ -35,10 +36,10 @@ export const gateOrchestration = {
       "id"
     >
   ) {
-    const id = generateElementId();
+    const id = generateCircuitElementId();
     visualizationEngine.prepareToAddGate({ ...options, id });
   },
-  removeGate(id: ElementId) {
+  removeGate(id: CircuitElementId) {
     Orchestrator.actions.turnOffElementSelection(id);
     elementTypes.deleteParticles([id]);
     elementSelections.deleteParticles([id]);
@@ -50,9 +51,12 @@ export const gateOrchestration = {
 
 export const conductorOrchestration = {
   addConductor(connectionPoints: [IPointData, IPointData]) {
-    const id = generateElementId();
-    conductorConnectionPoints.adaptParticle(id, connectionPoints);
-    visualizationEngine.addConductor({ id });
+    if (conductorSizeIsValid(connectionPoints)) {
+      const id = generateCircuitElementId();
+      elementTypes.adaptParticle(id, "conductor");
+      conductorConnectionPoints.adaptParticle(id, connectionPoints);
+      visualizationEngine.addConductor({ x: 0, y: 0, id });
+    }
   },
   updateConductorPreview({
     previousCoordinates,

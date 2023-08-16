@@ -1,6 +1,5 @@
-import { Graphics, Container } from "pixi.js";
-import VisualizationEngine from "../VisualizationEngine";
-import { bg, border, stroke } from "@/colors";
+import { Graphics } from "pixi.js";
+import { bg, stroke } from "@/colors";
 import { UnifiedState, adaptEffect, adaptState, unify } from "promethium-js";
 import buildGateBody from "./buildGateBody";
 import {
@@ -14,40 +13,27 @@ import {
   addOutputConnectionPoint,
   adjustOpacityOnInteract,
 } from "./utils";
-import { ElementId } from "@/entities/utils";
 import Orchestrator from "@/entities/Orchestrator";
-import { elementSelections } from "@/entities/visualizationEntities";
 import { elementTypes } from "@/entities/sharedEntities";
+import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
 
 export type GateTypes = ["and", "or", "not", "nand", "nor", "xor", "xnor"];
 
-export type GateOptions = {
-  visualizationEngine: VisualizationEngine;
-  x: number;
-  y: number;
+export type GateOptions = CircuitElementOptions & {
   gateType: GateTypes[number];
   noOfInputs?: number;
-  id: ElementId;
 };
 
 // TODO: Protect instance variables as with instance methods
-export class Gate extends Container {
-  dragStarted = unify(adaptState(false));
-  isBeingDragged = unify(adaptState(false));
+export class Gate extends CircuitElement {
   gateBody = new Graphics();
-  selectionRectange = new Graphics();
   inputTerminals = new Graphics();
-  outputTerminal = new Graphics();
-  visualizationEngine: VisualizationEngine;
   noOfInputs: UnifiedState<NonNullable<GateOptions["noOfInputs"]>>;
-  id: ElementId;
+  outputTerminal = new Graphics();
 
   constructor(options: GateOptions) {
-    super();
-    this.visualizationEngine = options.visualizationEngine;
-    this.x = options.x;
-    this.y = options.y;
-    this.id = options.id;
+    const { visualizationEngine, x, y, id } = options;
+    super({ visualizationEngine, x, y, id });
     let defaultNoOfInputs = options.gateType === "not" ? 1 : 2;
     let noOfInputs: number;
     if (options.gateType === "not" || options.noOfInputs === undefined) {
@@ -58,17 +44,17 @@ export class Gate extends Container {
     this.noOfInputs = unify(adaptState(noOfInputs));
   }
 
-  private buildGateBody() {
+  protected buildGateBody() {
     buildGateBody(this);
   }
 
-  private buildGateInputTerminals() {
-    const gateType = elementTypes.adaptParticle(this.id)[0];
+  protected buildGateInputTerminals() {
+    const gateType = elementTypes.adaptParticle(this.id)[0]();
     this.inputTerminals.x = inputTerminalDimensions.displacement_X;
     this.inputTerminals.beginFill(stroke["primary-dark"]);
     let end_Y: number;
     const isNoOfInputsOdd = () => this.noOfInputs() % 2 !== 0;
-    if (gateType() === "not") {
+    if (gateType === "not") {
       this.inputTerminals.y = 0;
       this.inputTerminals.drawCircle(
         inputTerminalDimensions.origin_X,
@@ -107,7 +93,7 @@ export class Gate extends Container {
         }
       }
     }
-    if (gateType() !== "not") {
+    if (gateType !== "not") {
       this.inputTerminals
         .lineStyle({
           width: inputTerminalDimensions.strokeWidth,
@@ -122,13 +108,13 @@ export class Gate extends Container {
     adaptEffect(() => adjustOpacityOnInteract(this, "inputTerminals"));
   }
 
-  private buildGateOutputTerminals() {
-    const gateType = elementTypes.adaptParticle(this.id)[0];
+  protected buildGateOutputTerminals() {
     this.outputTerminal.beginFill(stroke["primary-dark"]);
-    const circle_Y = gateType() === "not" ? "midPoint_Y_not" : "midPoint_Y";
+    const gateType = elementTypes.adaptParticle(this.id)[0]();
+    const circle_Y = gateType === "not" ? "midPoint_Y_not" : "midPoint_Y";
     const x =
       gateBodyDimensions.end_X +
-      outputTerminalDimensions[`delta_X_${gateType() as GateTypes[number]}`];
+      outputTerminalDimensions[`delta_X_${gateType as GateTypes[number]}`];
     const y = gateBodyDimensions[circle_Y];
     this.outputTerminal.drawCircle(
       x,
@@ -139,31 +125,23 @@ export class Gate extends Container {
     adaptEffect(() => adjustOpacityOnInteract(this, "outputTerminal"));
   }
 
-  private buildGateTerminals() {
+  protected buildGateTerminals() {
     this.buildGateInputTerminals();
     this.buildGateOutputTerminals();
   }
 
-  private buildSelectionRectangle() {
+  protected buildSelectionRectangle() {
     adaptEffect(() => {
-      this.selectionRectange.clear();
-      if (!this.isBeingDragged()) {
-        const isSelected = elementSelections.adaptParticle(this.id)[0];
-        if (isSelected()) {
-          this.selectionRectange.lineStyle({
-            width: selectionRectangeDimensions.strokeWidth,
-            color: border["secondary-dark"],
-            alignment: 1,
-          });
-        }
-      }
-      const Y = this.noOfInputs() >= 4 ? this.inputTerminals.y : 1; // if the input terminals are lower than the gateBody, then the `selectionRectange` should be at the level of the gateBody instead (this occurs when the `noOfInputs` is less than 6)
+      this.genericBuildSelectionRectangleFunctionality(
+        selectionRectangeDimensions.strokeWidth
+      );
+      const origin_Y = this.noOfInputs() >= 4 ? this.inputTerminals.y : 1; // if the input terminals are lower than the gateBody, then the `selectionRectange` should be at the level of the gateBody instead (this occurs when the `noOfInputs` is less than 6)
       const { width, height } = this.getBounds();
-      this.selectionRectange
+      this.selectionRectangle
         .beginFill(bg["primary-dark"], 0.01)
         .drawRect(
-          this.inputTerminals.x - selectionRectangeDimensions.originDelta_X,
-          Y - selectionRectangeDimensions.originDelta_Y,
+          this.inputTerminals.x + selectionRectangeDimensions.originDelta_X,
+          origin_Y + selectionRectangeDimensions.originDelta_Y,
           width + selectionRectangeDimensions.widthDelta,
           height + selectionRectangeDimensions.heightDelta
         );
@@ -174,58 +152,41 @@ export class Gate extends Container {
     this.gateBody.destroy();
     this.inputTerminals.destroy();
     this.outputTerminal.destroy();
-    this.selectionRectange.destroy();
+    this.selectionRectangle.destroy();
     this.destroy();
-  }
-
-  private dragEnd() {
-    this.dragStarted(false);
-    this.visualizationEngine.dragTarget = null;
-  }
-
-  private dragStart() {
-    this.dragStarted(true);
-    this.visualizationEngine.dragTarget = this;
   }
 
   init() {
     this.initGateBody();
     this.initGateTerminals();
-    this.initSelectionRectange();
+    this.initSelectionRectangle();
     this.cullable = true;
     Orchestrator.actions.turnOffAllElementSelections();
     Orchestrator.actions.turnOnElementSelection(this.id);
   }
 
-  private initGateBody() {
+  protected initGateBody() {
     this.buildGateBody();
     this.addChild(this.gateBody);
   }
 
-  private initGateTerminals() {
+  protected initGateTerminals() {
     this.buildGateTerminals();
     this.addChild(this.inputTerminals);
     this.addChild(this.outputTerminal);
   }
 
-  private initSelectionRectange() {
-    this.buildSelectionRectangle();
-    this.selectionRectange
-      .on("pointerdown", () => this.onPointerDown())
-      .on("pointerup", () => this.onPointerUp())
-      .on("pointerupoutside", () => this.onPointerUp());
-    this.selectionRectange.eventMode = "static";
-    this.selectionRectange.cursor = "pointer";
-    this.addChild(this.selectionRectange);
+  protected initSelectionRectangle() {
+    this.genericInitSelectionRectangleFunctionality();
   }
 
-  private onPointerDown() {
+  protected onPointerDown() {
     this.dragStart();
     Orchestrator.actions.turnOffAllElementSelections(this.id);
     Orchestrator.actions.toggleElementSelection(this.id);
   }
 
-  private onPointerUp() {
+  protected onPointerUp() {
     this.dragEnd();
     if (this.isBeingDragged()) {
       this.isBeingDragged(false);

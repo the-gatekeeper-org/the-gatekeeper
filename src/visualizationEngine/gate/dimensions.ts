@@ -23,8 +23,8 @@ export const gateBodyDimensions = {
 
 export const selectionRectangeDimensions = {
   strokeWidth: 2,
-  originDelta_X: 8,
-  originDelta_Y: 8,
+  originDelta_X: -8,
+  originDelta_Y: -8,
   widthDelta: 12,
   heightDelta: 12,
 } as const;

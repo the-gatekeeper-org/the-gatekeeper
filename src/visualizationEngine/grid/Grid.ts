@@ -11,9 +11,9 @@ export type GridOptions = {
 };
 
 export class Grid extends Graphics {
-  gridWidth: UnifiedState<number>;
-  gridHeight: UnifiedState<number>;
   gridGap: number;
+  gridHeight: UnifiedState<number>;
+  gridWidth: UnifiedState<number>;
 
   constructor(options: GridOptions) {
     super();
@@ -28,7 +28,7 @@ export class Grid extends Graphics {
     this.buildGrid();
   }
 
-  buildGrid() {
+  protected buildGrid() {
     adaptEffect(() => {
       this.clear();
       this.beginFill(stroke["primary-dark"]);

@@ -1,6 +1,10 @@
-import { ConductorPreviewCoordinates } from "@/entities/visualizationEntities";
+import {
+  ConductorConnectionPoints,
+  ConductorPreviewCoordinates,
+} from "@/entities/visualizationEntities";
+import { ConductorOrientation } from "./Conductor";
 
-export function hasDirectionRestarted(
+export function directionHasRestarted(
   coordinates: ConductorPreviewCoordinates,
   direction: "x" | "y"
 ) {
@@ -16,4 +20,47 @@ export function hasDirectionRestarted(
   }
 
   return hasRestarted;
+}
+
+export function conductorSizeIsValid(
+  connectionPoints: ConductorConnectionPoints
+) {
+  return (
+    connectionPoints[1].x - connectionPoints[0].x !== 0 ||
+    connectionPoints[1].y - connectionPoints[0].y !== 0
+  );
+}
+
+export function getConductorOrientationFromConnectionPoints(
+  connectionPoints: ConductorConnectionPoints
+) {
+  return (
+    connectionPoints[1].x - connectionPoints[0].x !== 0 ? "h" : "v"
+  ) as ConductorOrientation;
+}
+
+export function getConductorLengthFromConnectionPoints(
+  connectionPoints: ConductorConnectionPoints
+) {
+  const orientation =
+    getConductorOrientationFromConnectionPoints(connectionPoints);
+  const length =
+    orientation === "h"
+      ? Math.abs(connectionPoints[1].x - connectionPoints[0].x)
+      : Math.abs(connectionPoints[1].y - connectionPoints[0].y);
+
+  return length;
+}
+
+export function getConductorDirectionFromConnectionPoints(
+  connectionPoints: ConductorConnectionPoints
+) {
+  const orientation =
+    getConductorOrientationFromConnectionPoints(connectionPoints);
+  const direction =
+    orientation === "h"
+      ? Math.sign(connectionPoints[1].x - connectionPoints[0].x)
+      : Math.sign(connectionPoints[1].y - connectionPoints[0].y);
+
+  return direction;
 }
