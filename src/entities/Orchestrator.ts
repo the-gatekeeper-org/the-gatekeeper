@@ -5,6 +5,8 @@ import {
   connectionPointOrchestration,
   elementOrchestration,
   gateOrchestration,
+  inputOrchestration,
+  outputOrchestration,
 } from "./visualizationOrchestration";
 import { buttonOrchestration } from "./userInterfaceOrchestration";
 
@@ -16,6 +18,8 @@ const Orchestrator = new ActionEntity({
   },
   ...gateOrchestration,
   ...conductorOrchestration,
+  ...inputOrchestration,
+  ...outputOrchestration,
   ...elementOrchestration,
   ...connectionPointOrchestration,
   ...buttonOrchestration,

@@ -4,4 +4,6 @@ export const buttonSelections = new ParticleEntity({
   and: false,
   or: false,
   not: false,
+  input: false,
+  output: false,
 });

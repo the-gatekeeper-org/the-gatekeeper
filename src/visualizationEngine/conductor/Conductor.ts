@@ -7,7 +7,7 @@ import {
   conductorBodyDimensions,
   selectionRectangeDimensions,
 } from "./dimensions";
-import { bg, stroke } from "@/colors";
+import { stroke } from "@/colors";
 import { adaptEffect } from "promethium-js";
 import {
   directionHasRestarted,
@@ -16,8 +16,8 @@ import {
   getConductorDirectionFromConnectionPoints,
 } from "./utils";
 import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
-import Orchestrator from "@/entities/Orchestrator";
 import { ca } from "@/utils";
+import { adjustOpacityOnInteract } from "../utils";
 
 export type ConductorOrientation = "h" | "v";
 
@@ -31,9 +31,6 @@ export class Conductor extends CircuitElement {
   constructor(options: ConductorOptions) {
     const { visualizationEngine, x, y, id } = options;
     super({ visualizationEngine, x, y, id });
-    this.id = options.id;
-    this.x = options.x;
-    this.y = options.y;
   }
 
   static buildConductorPreview() {
@@ -82,28 +79,24 @@ export class Conductor extends CircuitElement {
   }
 
   protected buildConductorBody() {
-    const connectionPoints = conductorConnectionPoints.adaptParticle(
-      this.id
-    )[0]();
-    if (connectionPoints[0] && connectionPoints[1]) {
-      this.x = connectionPoints[0].x;
-      this.y = connectionPoints[0].y;
-      const delta_X = connectionPoints[1].x - connectionPoints[0].x;
-      const delta_Y = connectionPoints[1].y - connectionPoints[0].y;
-      this.conductorBody
-        .lineStyle({
-          width: conductorBodyDimensions.strokeWidth,
-          color: stroke["primary-dark"],
-        })
-        .moveTo(
-          conductorBodyDimensions.origin_X,
-          conductorBodyDimensions.origin_Y
-        )
-        .lineTo(
-          conductorBodyDimensions.origin_Y + delta_X,
-          conductorBodyDimensions.origin_Y + delta_Y
-        );
-    }
+    adaptEffect(() => {
+      this.conductorBody.clear();
+      const connectionPoints = conductorConnectionPoints.adaptParticle(
+        this.id
+      )[0]();
+      if (connectionPoints[0] && connectionPoints[1]) {
+        const origin = connectionPoints[0];
+        const end = connectionPoints[1];
+        this.conductorBody
+          .lineStyle({
+            width: conductorBodyDimensions.strokeWidth,
+            color: stroke["primary-dark"],
+          })
+          .moveTo(origin.x, origin.y)
+          .lineTo(end.x, end.y);
+      }
+      adjustOpacityOnInteract(this, this.conductorBody);
+    });
   }
 
   protected buildSelectionRectangle() {
@@ -114,57 +107,65 @@ export class Conductor extends CircuitElement {
       const connectionPoints = conductorConnectionPoints.adaptParticle(
         this.id
       )[0]();
-      const orientation =
-        getConductorOrientationFromConnectionPoints(connectionPoints);
-      const length = getConductorLengthFromConnectionPoints(connectionPoints);
-      const direction =
-        getConductorDirectionFromConnectionPoints(connectionPoints);
-      let origin_X: number;
-      let origin_Y: number;
-      let width: number;
-      let height: number;
-      ca(
-        {
-          condition: orientation === "h",
-          action() {
-            width = length + selectionRectangeDimensions.lengthDelta;
-            height = selectionRectangeDimensions.breadth;
+      if (connectionPoints[0] && connectionPoints[1]) {
+        const orientation =
+          getConductorOrientationFromConnectionPoints(connectionPoints);
+        const length = getConductorLengthFromConnectionPoints(connectionPoints);
+        const direction =
+          getConductorDirectionFromConnectionPoints(connectionPoints);
+        let origin_X: number;
+        let origin_Y: number;
+        ca(
+          {
+            condition: orientation === "h",
+            action() {
+              ca(
+                {
+                  condition: direction === 1,
+                  action() {
+                    origin_X = selectionRectangeDimensions.origin_X;
+                    origin_Y =
+                      selectionRectangeDimensions.origin_Y -
+                      selectionRectangeDimensions.originFixDelta;
+                  },
+                },
+                () => {
+                  origin_X = selectionRectangeDimensions.origin_X - length;
+                  origin_Y =
+                    selectionRectangeDimensions.origin_Y -
+                    selectionRectangeDimensions.originFixDelta;
+                }
+              );
+            },
+          },
+          () => {
             ca(
               {
                 condition: direction === 1,
                 action() {
-                  origin_X = selectionRectangeDimensions.origin_X;
+                  origin_X =
+                    selectionRectangeDimensions.origin_X -
+                    selectionRectangeDimensions.originFixDelta;
                   origin_Y = selectionRectangeDimensions.origin_Y;
                 },
               },
               () => {
-                origin_X = selectionRectangeDimensions.origin_X - length;
-                origin_Y = selectionRectangeDimensions.origin_Y;
+                origin_X =
+                  selectionRectangeDimensions.origin_X -
+                  selectionRectangeDimensions.originFixDelta;
+                origin_Y = selectionRectangeDimensions.origin_Y - length;
               }
             );
-          },
-        },
-        () => {
-          width = selectionRectangeDimensions.breadth;
-          height = length + selectionRectangeDimensions.lengthDelta;
-          ca(
-            {
-              condition: direction === 1,
-              action() {
-                origin_X = selectionRectangeDimensions.origin_X;
-                origin_Y = selectionRectangeDimensions.origin_Y;
-              },
-            },
-            () => {
-              origin_X = selectionRectangeDimensions.origin_Y;
-              origin_Y = selectionRectangeDimensions.origin_X - length;
-            }
-          );
-        }
-      );
-      this.selectionRectangle
-        .beginFill(bg["primary-dark"], 0.01)
-        .drawRect(origin_X!, origin_Y!, width!, height!);
+          }
+        );
+        const { width, height } = this.getBounds();
+        this.selectionRectangle.drawRect(
+          origin_X!,
+          origin_Y!,
+          width + selectionRectangeDimensions.widthDelta,
+          height + selectionRectangeDimensions.heightDelta
+        );
+      }
     });
   }
 
@@ -175,7 +176,7 @@ export class Conductor extends CircuitElement {
 
   init() {
     this.initConductorBody();
-    this.initSelectionRectangle();
+    this.genericInitFunctionality();
   }
 
   protected initConductorBody() {
@@ -183,27 +184,11 @@ export class Conductor extends CircuitElement {
     this.addChild(this.conductorBody);
   }
 
-  protected initSelectionRectangle() {
-    this.genericInitSelectionRectangleFunctionality();
-    this.selectionRectangle.on("pointermove", (e) => this.onPointerMove(e));
-  }
-
   protected onPointerDown() {
-    this.dragStart();
-    Orchestrator.actions.turnOffAllElementSelections(this.id);
-    Orchestrator.actions.toggleElementSelection(this.id);
-  }
-
-  protected onPointerMove(e: PointerEvent) {
-    // will do something here soon!!!
-    e;
+    this.genericOnPointerDownFunctionality();
   }
 
   protected onPointerUp() {
-    this.dragEnd();
-    if (this.isBeingDragged()) {
-      this.isBeingDragged(false);
-      Orchestrator.actions.turnOnElementSelection(this.id);
-    }
+    this.genericOnPointerUpFunctionality();
   }
 }

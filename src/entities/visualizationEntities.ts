@@ -1,5 +1,5 @@
 import { ParticleEntity } from "promethium-js";
-import { CircuitElementId } from "./utils";
+import { CircuitElementId, MultipleConnectionPointId } from "./utils";
 import { IPointData } from "pixi.js";
 
 export const elementSelections = new ParticleEntity<{
@@ -27,8 +27,11 @@ export const conductorPreviewData = new ParticleEntity<{
   isBeingDrawn: false,
 });
 
-export type ConnectionPoints = IPointData[];
-export type ConductorConnectionPoints = [IPointData, IPointData];
+export type ConnectionPoint = IPointData & {
+  multipleConnectionPointId?: MultipleConnectionPointId | null;
+};
+export type ConnectionPoints = ConnectionPoint[];
+export type ConductorConnectionPoints = [ConnectionPoint, ConnectionPoint];
 
 // TODO: Add `prettierrc` with extended line character limit
 export const inputConnectionPoints = new ParticleEntity<

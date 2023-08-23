@@ -9,12 +9,14 @@ import {
   gridGap,
 } from "./dimensions";
 import { Conductor, ConductorOptions } from "./conductor/Conductor";
-import { round } from "./utils";
+import { checkForHoverOverConnectionPoint, round } from "./utils";
 import {
   ConductorConnectionPoints,
   conductorPreviewData,
 } from "@/entities/visualizationEntities";
 import { CircuitElement } from "./CircuitElement";
+import { Input, InputOptions } from "./input/Input";
+import { Output, OutputOptions } from "./output/Output";
 
 interface GlobalThis {
   __PIXI_STAGE__: Container;
@@ -32,6 +34,8 @@ export class VisualizationEngine {
     GateOptions,
     "gateType" | "noOfInputs" | "id"
   > | null = null;
+  optionsOfNextInputToAdd: Pick<InputOptions, "id"> | null = null;
+  optionsOfNextOutputToAdd: Pick<OutputOptions, "id"> | null = null;
   renderer: Renderer = new Renderer();
   stage: Container = new Container();
   ticker: Ticker = new Ticker();
@@ -56,6 +60,26 @@ export class VisualizationEngine {
     this.stage.addChild(gate);
 
     return gate;
+  }
+
+  protected addInput(options: Omit<InputOptions, "visualizationEngine">) {
+    const input = new Input({ visualizationEngine: this, ...options });
+    const { id } = options;
+    Orchestrator.actions.addInput({ id, input });
+    input.init();
+    this.stage.addChild(input);
+
+    return input;
+  }
+
+  protected addOutput(options: Omit<OutputOptions, "visualizationEngine">) {
+    const output = new Output({ visualizationEngine: this, ...options });
+    const { id } = options;
+    Orchestrator.actions.addOutput({ id, output });
+    output.init();
+    this.stage.addChild(output);
+
+    return output;
   }
 
   protected addGrid(options: GridOptions) {
@@ -107,7 +131,7 @@ export class VisualizationEngine {
 
   protected conditionallyDrawConnectionPointCircle(e: PointerEvent) {
     const [connectionPointIsBeingHoveredOver] =
-      Orchestrator.actions.checkForHoverOverConnectionPoint({
+      checkForHoverOverConnectionPoint({
         x: round(e.x),
         y: round(e.y),
       });
@@ -140,6 +164,62 @@ export class VisualizationEngine {
           Orchestrator.actions.turnOffAllElementSelections();
         }
       });
+    }
+  }
+
+  protected conditionallySpawnNextGate(e: PointerEvent) {
+    if (this.optionsOfNextGateToAdd) {
+      this.addGate({
+        x: round(e.x) - gridGap,
+        y: round(e.y) - gridGap,
+        ...this.optionsOfNextGateToAdd,
+      });
+    }
+    this.optionsOfNextGateToAdd = null;
+  }
+
+  protected conditionallySpawnNextInput(e: PointerEvent) {
+    if (this.optionsOfNextInputToAdd) {
+      this.addInput({
+        x: round(e.x) - gridGap,
+        y: round(e.y) - gridGap,
+        ...this.optionsOfNextInputToAdd,
+      });
+    }
+    this.optionsOfNextInputToAdd = null;
+  }
+
+  protected conditionallySpawnNextOutput(e: PointerEvent) {
+    if (this.optionsOfNextOutputToAdd) {
+      this.addOutput({
+        x: round(e.x) - gridGap,
+        y: round(e.y) - gridGap,
+        ...this.optionsOfNextOutputToAdd,
+      });
+    }
+    this.optionsOfNextOutputToAdd = null;
+  }
+
+  protected conditionallySpawnPreviewConductors() {
+    const conductorPreviewIsBeingDrawn =
+      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
+    if (conductorPreviewIsBeingDrawn) {
+      const coordinates =
+        conductorPreviewData.adaptParticle("coordinates")[0]();
+      const sharedCoordinates =
+        Conductor.conductorPreviewPrimaryOrientation === "h"
+          ? { x: coordinates.current!.x, y: coordinates.starting!.y }
+          : { x: coordinates.starting!.x, y: coordinates.current!.y };
+      const conductorCoordinates_1 = [
+        { x: coordinates.starting!.x, y: coordinates.starting!.y },
+        sharedCoordinates,
+      ] as ConductorConnectionPoints;
+      const conductorCoordinates_2 = [
+        sharedCoordinates,
+        { x: coordinates.current!.x, y: coordinates.current!.y },
+      ] as ConductorConnectionPoints;
+      Orchestrator.actions.addConductor(conductorCoordinates_1);
+      Orchestrator.actions.addConductor(conductorCoordinates_2);
     }
   }
 
@@ -221,15 +301,16 @@ export class VisualizationEngine {
 
   protected onPointerDown(e: PointerEvent) {
     this.prepareToDragTarget(e);
-    this.spawnNextGate(e);
-    this.optionsOfNextGateToAdd = null;
+    this.conditionallySpawnNextGate(e);
+    this.conditionallySpawnNextInput(e);
+    this.conditionallySpawnNextOutput(e);
     Orchestrator.actions.turnOffButtonSelections();
     Orchestrator.actions.turnOffAllElementSelections();
     this.conditionallyInitDrawingOfConductorPreviewVisuals(e);
   }
 
   protected onPointerUp() {
-    this.spawnPreviewConductors();
+    this.conditionallySpawnPreviewConductors();
     Orchestrator.actions.updateConductorPreview({
       previousCoordinates: null,
       currentCoordinates: null,
@@ -243,12 +324,33 @@ export class VisualizationEngine {
     this.conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(e);
   }
 
+  protected nullifyNextCircuitElementsToAdd() {
+    this.optionsOfNextGateToAdd = null;
+    this.optionsOfNextInputToAdd = null;
+    this.optionsOfNextOutputToAdd = null;
+  }
+
   prepareToAddGate(
     options: Pick<GateOptions, "gateType" | "noOfInputs" | "id">
   ) {
+    this.nullifyNextCircuitElementsToAdd();
     this.optionsOfNextGateToAdd = {
       gateType: options.gateType,
       noOfInputs: options.noOfInputs,
+      id: options.id,
+    };
+  }
+
+  prepareToAddInput(options: Pick<InputOptions, "id">) {
+    this.nullifyNextCircuitElementsToAdd();
+    this.optionsOfNextInputToAdd = {
+      id: options.id,
+    };
+  }
+
+  prepareToAddOutput(options: Pick<OutputOptions, "id">) {
+    this.nullifyNextCircuitElementsToAdd();
+    this.optionsOfNextOutputToAdd = {
       id: options.id,
     };
   }
@@ -262,39 +364,5 @@ export class VisualizationEngine {
       x: this.dragTarget?.x || 0,
       y: this.dragTarget?.y || 0,
     };
-  }
-
-  protected spawnNextGate(e: PointerEvent) {
-    if (this.optionsOfNextGateToAdd !== null) {
-      this.addGate({
-        // TODO: transfer math into gate
-        x: round(e.x) - gridGap,
-        y: round(e.y) - gridGap,
-        ...this.optionsOfNextGateToAdd,
-      });
-    }
-  }
-
-  protected spawnPreviewConductors() {
-    const conductorPreviewIsBeingDrawn =
-      conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
-    if (conductorPreviewIsBeingDrawn) {
-      const coordinates =
-        conductorPreviewData.adaptParticle("coordinates")[0]();
-      const sharedCoordinates =
-        Conductor.conductorPreviewPrimaryOrientation === "h"
-          ? { x: coordinates.current!.x, y: coordinates.starting!.y }
-          : { x: coordinates.starting!.x, y: coordinates.current!.y };
-      const conductorCoordinates_1 = [
-        { x: coordinates.starting!.x, y: coordinates.starting!.y },
-        sharedCoordinates,
-      ] as ConductorConnectionPoints;
-      const conductorCoordinates_2 = [
-        sharedCoordinates,
-        { x: coordinates.current!.x, y: coordinates.current!.y },
-      ] as ConductorConnectionPoints;
-      Orchestrator.actions.addConductor(conductorCoordinates_1);
-      Orchestrator.actions.addConductor(conductorCoordinates_2);
-    }
   }
 }

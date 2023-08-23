@@ -2,8 +2,9 @@ import { adaptEffect } from "promethium-js";
 import { Gate, GateTypes } from "./Gate";
 import { stroke } from "@/colors";
 import { gateBodyDimensions } from "./dimensions";
-import { adjustOpacityOnInteract } from "./utils";
+import { adjustOpacityOnInteract } from "../utils";
 import { elementTypes } from "@/entities/sharedEntities";
+import { Graphics } from "pixi.js";
 
 const gateBodyBuilderFns = {
   and: (gate: Gate) => {
@@ -25,35 +26,35 @@ const gateBodyBuilderFns = {
     return gate.gateBody;
   },
   // displacement parameter is used here to enable proper rendering of `selectionRectange` on the xor gate
-  or: (gate: Gate, xDisplacement?: number) => {
+  or: (gate: Gate, displacement_X?: number) => {
     gate.gateBody
       .quadraticCurveTo(
-        gateBodyDimensions.frontProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.frontProtrusionDelta_X_or + (displacement_X || 0),
         gateBodyDimensions.origin_Y,
-        gateBodyDimensions.end_X + (xDisplacement || 0),
+        gateBodyDimensions.end_X + (displacement_X || 0),
         gateBodyDimensions.midPoint_Y
       )
       .moveTo(
-        gateBodyDimensions.origin_X + (xDisplacement || 0),
+        gateBodyDimensions.origin_X + (displacement_X || 0),
         gateBodyDimensions.end_Y
       )
       .quadraticCurveTo(
-        gateBodyDimensions.frontProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.frontProtrusionDelta_X_or + (displacement_X || 0),
         gateBodyDimensions.end_Y,
-        gateBodyDimensions.end_X + (xDisplacement || 0),
+        gateBodyDimensions.end_X + (displacement_X || 0),
         gateBodyDimensions.midPoint_Y
       )
       .moveTo(
-        gateBodyDimensions.origin_X + (xDisplacement || 0),
+        gateBodyDimensions.origin_X + (displacement_X || 0),
         gateBodyDimensions.origin_Y
       )
       .bezierCurveTo(
-        gateBodyDimensions.backProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.backProtrusionDelta_X_or + (displacement_X || 0),
         gateBodyDimensions.origin_Y +
           gateBodyDimensions.backProtrusionDelta_Y_or,
-        gateBodyDimensions.backProtrusionDelta_X_or + (xDisplacement || 0),
+        gateBodyDimensions.backProtrusionDelta_X_or + (displacement_X || 0),
         gateBodyDimensions.end_Y - gateBodyDimensions.backProtrusionDelta_Y_or,
-        gateBodyDimensions.origin_X + (xDisplacement || 0),
+        gateBodyDimensions.origin_X + (displacement_X || 0),
         gateBodyDimensions.end_Y
       );
 
@@ -120,12 +121,12 @@ const gateBodyBuilderFns = {
   },
 };
 
-export default function buildGateBody(gate: Gate) {
+export default function buildGateBody(gate: Gate, part: Graphics) {
   gate.gateBody.lineStyle({
     width: gateBodyDimensions.strokeWidth,
     color: stroke["primary-dark"],
   });
   const gateType = elementTypes.adaptParticle(gate.id)[0];
   gateBodyBuilderFns[gateType() as GateTypes[number]](gate);
-  adaptEffect(() => adjustOpacityOnInteract(gate, "gateBody"));
+  adaptEffect(() => adjustOpacityOnInteract(gate, part));
 }

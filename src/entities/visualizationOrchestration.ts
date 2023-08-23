@@ -1,11 +1,8 @@
 import Orchestrator, { visualizationEngine } from "./Orchestrator";
-import {
-  CircuitElementId,
-  checkForHoverOverConnectionPointInConnectionPointsEntries,
-  generateCircuitElementId,
-} from "./utils";
+import { CircuitElementId, generateCircuitElementId } from "./utils";
 import { Gate, GateOptions } from "@/visualizationEngine/gate/Gate";
 import {
+  ConductorConnectionPoints,
   conductorConnectionPoints,
   conductorPreviewData,
   elementSelections,
@@ -15,6 +12,8 @@ import {
 import { elementTypes, elementInstances } from "./sharedEntities";
 import { IPointData } from "pixi.js";
 import { conductorSizeIsValid } from "@/visualizationEngine/conductor/utils";
+import { Input, InputOptions } from "@/visualizationEngine/input/Input";
+import { Output, OutputOptions } from "@/visualizationEngine/output/Output";
 
 export const gateOrchestration = {
   addGate({
@@ -50,12 +49,26 @@ export const gateOrchestration = {
 };
 
 export const conductorOrchestration = {
-  addConductor(connectionPoints: [IPointData, IPointData]) {
-    if (conductorSizeIsValid(connectionPoints)) {
+  addConductor(globalConnectionPoints: [IPointData, IPointData]) {
+    if (conductorSizeIsValid(globalConnectionPoints)) {
       const id = generateCircuitElementId();
       elementTypes.adaptParticle(id, "conductor");
+      const connectionPoints = [
+        {
+          x: 0,
+          y: 0,
+        },
+        {
+          x: globalConnectionPoints[1].x - globalConnectionPoints[0].x,
+          y: globalConnectionPoints[1].y - globalConnectionPoints[0].y,
+        },
+      ] as ConductorConnectionPoints;
       conductorConnectionPoints.adaptParticle(id, connectionPoints);
-      visualizationEngine.addConductor({ x: 0, y: 0, id });
+      visualizationEngine.addConductor({
+        x: globalConnectionPoints[0].x,
+        y: globalConnectionPoints[0].y,
+        id,
+      });
     }
   },
   updateConductorPreview({
@@ -142,6 +155,32 @@ export const elementOrchestration = {
   },
 };
 
+export const inputOrchestration = {
+  addInput({ id, input }: Pick<InputOptions, "id"> & { input: Input }) {
+    elementTypes.adaptParticle(id, "input");
+    elementSelections.adaptParticle(id, false);
+    outputConnectionPoints.adaptParticle(id, []);
+    elementInstances.adaptParticle(id, input);
+  },
+  prepareToAddInput() {
+    const id = generateCircuitElementId();
+    visualizationEngine.prepareToAddInput({ id });
+  },
+};
+
+export const outputOrchestration = {
+  addOutput({ id, output }: Pick<OutputOptions, "id"> & { output: Output }) {
+    elementTypes.adaptParticle(id, "output");
+    elementSelections.adaptParticle(id, false);
+    inputConnectionPoints.adaptParticle(id, []);
+    elementInstances.adaptParticle(id, output);
+  },
+  prepareToAddOutput() {
+    const id = generateCircuitElementId();
+    visualizationEngine.prepareToAddOutput({ id });
+  },
+};
+
 export const connectionPointOrchestration = {
   addInputConnectionPoint({
     id,
@@ -169,50 +208,18 @@ export const connectionPointOrchestration = {
       connectionPoint,
     ]);
   },
-  checkForHoverOverConnectionPoint(hoverPoint: IPointData) {
-    const inputConnectionPointsEntries = Object.entries(
-      inputConnectionPoints.getParticles()
-    );
-    let [
-      inputConnectionPointIsBeingHoveredOver,
-      inputConnectionPointElementInstance,
-      inputConnectionPoint,
-    ] = checkForHoverOverConnectionPointInConnectionPointsEntries(
-      hoverPoint,
-      inputConnectionPointsEntries
-    );
-    if (inputConnectionPointIsBeingHoveredOver === true) {
-      return [
-        inputConnectionPointIsBeingHoveredOver,
-        inputConnectionPointElementInstance,
-        inputConnectionPoint,
-      ] as ReturnType<
-        typeof checkForHoverOverConnectionPointInConnectionPointsEntries
-      >;
-    }
-    const outputConnectionPointsEntries = Object.entries(
-      outputConnectionPoints.getParticles()
-    );
-    let [
-      outputConnectionPointIsBeingHoveredOver,
-      outputConnectionPointElementInstance,
-      outputConnectionPoint,
-    ] = checkForHoverOverConnectionPointInConnectionPointsEntries(
-      hoverPoint,
-      outputConnectionPointsEntries
-    );
-    if (outputConnectionPointIsBeingHoveredOver === true) {
-      return [
-        outputConnectionPointIsBeingHoveredOver,
-        outputConnectionPointElementInstance,
-        outputConnectionPoint,
-      ] as ReturnType<
-        typeof checkForHoverOverConnectionPointInConnectionPointsEntries
-      >;
-    }
-
-    return [false, null, null] as ReturnType<
-      typeof checkForHoverOverConnectionPointInConnectionPointsEntries
-    >;
+  clearInputConnectionPoints({
+    id,
+  }: {
+    id: Parameters<typeof inputConnectionPoints.adaptParticle>[0];
+  }) {
+    inputConnectionPoints.adaptParticle(id)[1]([]);
+  },
+  clearOutputConnectionPoints({
+    id,
+  }: {
+    id: Parameters<typeof outputConnectionPoints.adaptParticle>[0];
+  }) {
+    outputConnectionPoints.adaptParticle(id)[1]([]);
   },
 };

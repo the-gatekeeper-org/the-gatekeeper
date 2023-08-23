@@ -3,7 +3,12 @@ import { CircuitElementId } from "./utils";
 import { GateTypes } from "@/visualizationEngine/gate/Gate";
 import { DisplayObject } from "pixi.js";
 
-type ElementTypes = GateTypes[number] | "conductor" | "blackBox";
+type ElementTypes =
+  | GateTypes[number]
+  | "conductor"
+  | "input"
+  | "output"
+  | "blackBox";
 
 export const elementTypes = new ParticleEntity<
   Record<CircuitElementId, ElementTypes>

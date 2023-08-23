@@ -6,8 +6,24 @@ const buttons: Parameters<typeof Button>[0][] = [
   { text: "S" },
   { text: "L" },
   { text: "T" },
-  { text: "I" },
-  { text: "Y" },
+  {
+    text: "I",
+    onClick: () => {
+      Orchestrator.actions.prepareToAddInput();
+      Orchestrator.actions.turnOffButtonSelections();
+      Orchestrator.actions.turnOnButtonSelection("input");
+    },
+    id: "input",
+  },
+  {
+    text: "Y",
+    onClick: () => {
+      Orchestrator.actions.prepareToAddOutput();
+      Orchestrator.actions.turnOffButtonSelections();
+      Orchestrator.actions.turnOnButtonSelection("output");
+    },
+    id: "output",
+  },
   {
     text: "A",
     onClick: () => {

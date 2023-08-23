@@ -7,15 +7,12 @@ export function ca<T extends CAObject[] | CAObject>(
     for (let i = 0; i < caObject.length; i++) {
       const caObjectElement = caObject[i];
       if (caObjectElement.condition) {
-        caObjectElement.action();
-
-        return;
+        return caObjectElement.action();
       }
     }
   } else if (caObject.condition) {
-    caObject.action();
-
-    return;
+    return caObject.action();
   }
-  altAction?.();
+
+  return altAction?.();
 }
