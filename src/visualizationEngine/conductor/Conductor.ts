@@ -1,6 +1,7 @@
 import {
   conductorConnectionPoints,
   conductorPreviewData,
+  elementPositions,
 } from "@/entities/visualizationEntities";
 import { Graphics } from "pixi.js";
 import {
@@ -14,17 +15,27 @@ import {
   getConductorLengthFromConnectionPoints,
   getConductorOrientationFromConnectionPoints,
   getConductorDirectionFromConnectionPoints,
+  addConductorConnectionPoint,
 } from "./utils";
 import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
 import { ca } from "@/utils";
-import { adjustOpacityOnInteract } from "../utils";
+import {
+  adjustOpacityOnInteract,
+  conductorConnectionPointIsBeingHoveredOver,
+  round,
+} from "../utils";
+import Orchestrator from "@/entities/Orchestrator";
+import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
 
 export type ConductorOrientation = "h" | "v";
 
-export type ConductorOptions = CircuitElementOptions;
+export type ConductorOptions = CircuitElementOptions & {
+  conductorLength?: number;
+};
 
 export class Conductor extends CircuitElement {
   conductorBody = new Graphics();
+  conductorEndLocalConnectionPoint = { x: 0, y: 0 };
   static conductorPreview = new Graphics();
   static conductorPreviewPrimaryOrientation: ConductorOrientation = "h";
 
@@ -78,6 +89,23 @@ export class Conductor extends CircuitElement {
     });
   }
 
+  protected addConductorConnectionPoints() {
+    const position = elementPositions.adaptParticle(this.id)[0];
+    adaptEffect(() => {
+      Orchestrator.actions.clearOutputConnectionPoints({ id: this.id });
+      addConductorConnectionPoint(this);
+    }, [position]);
+  }
+
+  protected setConductorEndGlobalConnectionPoint() {
+    adaptEffect(() => {
+      const connectionPoints = conductorConnectionPoints.adaptParticle(
+        this.id
+      )[0]();
+      this.conductorEndLocalConnectionPoint = this.toLocal(connectionPoints[1]);
+    });
+  }
+
   protected buildConductorBody() {
     adaptEffect(() => {
       this.conductorBody.clear();
@@ -85,8 +113,8 @@ export class Conductor extends CircuitElement {
         this.id
       )[0]();
       if (connectionPoints[0] && connectionPoints[1]) {
-        const origin = connectionPoints[0];
-        const end = connectionPoints[1];
+        const origin = this.toLocal(connectionPoints[0]);
+        const end = this.toLocal(connectionPoints[1]);
         this.conductorBody
           .lineStyle({
             width: conductorBodyDimensions.strokeWidth,
@@ -169,12 +197,26 @@ export class Conductor extends CircuitElement {
     });
   }
 
+  protected conditionallyDrawConnectionPointCircle(e: PointerEvent) {
+    if (conductorConnectionPointIsBeingHoveredOver(this, { x: e.x, y: e.y })) {
+      this.visualizationEngine.connectionPointIsBeingHoveredOver(true);
+      this.visualizationEngine.connectionPointSelectionCirclePosition({
+        x: round(e.x),
+        y: round(e.y),
+      });
+    } else {
+      this.visualizationEngine.connectionPointIsBeingHoveredOver(false);
+    }
+  }
+
   detonate() {
     this.conductorBody.destroy();
-    this.destroy();
+    this.genericDetonateFunctionality();
   }
 
   init() {
+    this.setConductorEndGlobalConnectionPoint();
+    this.addConductorConnectionPoints();
     this.initConductorBody();
     this.genericInitFunctionality();
   }
@@ -184,11 +226,27 @@ export class Conductor extends CircuitElement {
     this.addChild(this.conductorBody);
   }
 
-  protected onPointerDown() {
-    this.genericOnPointerDownFunctionality();
-  }
+  protected onPointerDown = () => {
+    const simulatorClickMode =
+      $generalSimulatorState.adaptParticle("clickMode")[0]();
+    if (simulatorClickMode === "selecting") {
+      this.genericOnPointerDownFunctionality();
+    }
+  };
 
-  protected onPointerUp() {
-    this.genericOnPointerUpFunctionality();
-  }
+  protected onPointerMove = (e: PointerEvent) => {
+    const simulatorClickMode =
+      $generalSimulatorState.adaptParticle("clickMode")[0]();
+    if (simulatorClickMode === "selecting") {
+      this.genericOnPointerMoveFunctionality(e);
+    }
+  };
+
+  protected onPointerUp = () => {
+    const simulatorClickMode =
+      $generalSimulatorState.adaptParticle("clickMode")[0]();
+    if (simulatorClickMode === "selecting") {
+      this.genericOnPointerUpFunctionality();
+    }
+  };
 }

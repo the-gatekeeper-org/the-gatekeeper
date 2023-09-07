@@ -5,26 +5,10 @@ import { inputTerminalDimensions } from "./dimensions";
 export function addInputConnectionPoint(gate: Gate, index: number) {
   const x = inputTerminalDimensions.origin_X;
   const y =
-    gate.inputTerminals.y +
-    inputTerminalDimensions.origin_Y +
-    index * inputTerminalDimensions.terminalGap;
+    gate.inputTerminalsOrigin_Y + index * inputTerminalDimensions.terminalGap;
+  const globalConnectionPoint = gate.toGlobal({ x, y });
   Orchestrator.actions.addInputConnectionPoint({
     id: gate.id,
-    connectionPoint: { x, y },
-  });
-}
-
-export function addOutputConnectionPoint({
-  gate,
-  x,
-  y,
-}: {
-  gate: Gate;
-  x: number;
-  y: number;
-}) {
-  Orchestrator.actions.addOutputConnectionPoint({
-    id: gate.id,
-    connectionPoint: { x, y },
+    connectionPoint: globalConnectionPoint,
   });
 }

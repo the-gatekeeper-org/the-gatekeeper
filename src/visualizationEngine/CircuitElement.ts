@@ -1,8 +1,11 @@
 import { CircuitElementId } from "@/entities/utils";
 import { Container, Graphics } from "pixi.js";
-import { adaptState, unify } from "promethium-js";
+import { adaptEffect, adaptState, unify } from "promethium-js";
 import { VisualizationEngine } from "./VisualizationEngine";
-import { elementSelections } from "@/entities/visualizationEntities";
+import {
+  elementPositions,
+  elementSelections,
+} from "@/entities/visualizationEntities";
 import { bg, border } from "@/colors";
 import Orchestrator from "@/entities/Orchestrator";
 
@@ -23,12 +26,21 @@ export abstract class CircuitElement extends Container {
   constructor(options: CircuitElementOptions) {
     super();
     this.visualizationEngine = options.visualizationEngine;
-    this.x = options.x;
-    this.y = options.y;
+    const position = elementPositions.adaptParticle(options.id, {
+      x: options.x,
+      y: options.y,
+    })[0];
+    adaptEffect(() => {
+      this.position = position();
+    });
     this.id = options.id;
   }
 
   protected abstract buildSelectionRectangle(): void;
+
+  protected abstract conditionallyDrawConnectionPointCircle(
+    e: PointerEvent
+  ): void;
 
   protected dragEnd() {
     this.dragStarted(false);
@@ -40,16 +52,21 @@ export abstract class CircuitElement extends Container {
     this.visualizationEngine.dragTarget = this;
   }
 
+  protected abstract init(): void;
+
   protected initSelectionRectangle() {
     this.buildSelectionRectangle();
     this.selectionRectangle
-      .on("pointerdown", () => this.onPointerDown())
-      .on("pointerup", () => this.onPointerUp())
-      .on("pointerupoutside", () => this.onPointerUp());
+      .on("pointerdown", this.onPointerDown)
+      .on("pointerup", this.onPointerUp)
+      .on("pointerupoutside", this.onPointerUp)
+      .on("pointermove", this.onPointerMove);
     this.selectionRectangle.eventMode = "static";
     this.selectionRectangle.cursor = "pointer";
     this.addChild(this.selectionRectangle);
   }
+
+  protected abstract detonate(): void;
 
   protected genericBuildSelectionRectangleFunctionality(strokeWidth: number) {
     this.selectionRectangle.clear();
@@ -69,13 +86,22 @@ export abstract class CircuitElement extends Container {
     this.initSelectionRectangle();
     this.cullable = true;
     Orchestrator.actions.turnOffAllElementSelections();
-    Orchestrator.actions.turnOnElementSelection(this.id);
+  }
+
+  protected genericDetonateFunctionality() {
+    this.selectionRectangle.destroy();
+    this.destroy();
   }
 
   protected genericOnPointerDownFunctionality() {
     this.dragStart();
     Orchestrator.actions.turnOffAllElementSelections(this.id);
     Orchestrator.actions.toggleElementSelection(this.id);
+  }
+
+  protected genericOnPointerMoveFunctionality(e: PointerEvent) {
+    this.conditionallyDrawConnectionPointCircle(e);
+    this.visualizationEngine.hoverTarget = this;
   }
 
   protected genericOnPointerUpFunctionality() {
@@ -87,5 +113,6 @@ export abstract class CircuitElement extends Container {
   }
 
   protected abstract onPointerDown(): void;
+  protected abstract onPointerMove(e: PointerEvent): void;
   protected abstract onPointerUp(): void;
 }

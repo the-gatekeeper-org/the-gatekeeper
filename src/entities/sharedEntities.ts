@@ -1,19 +1,14 @@
 import { ParticleEntity } from "promethium-js";
 import { CircuitElementId } from "./utils";
-import { GateTypes } from "@/visualizationEngine/gate/Gate";
-import { DisplayObject } from "pixi.js";
+import { GateType } from "@/visualizationEngine/gate/Gate";
+import { CircuitElement } from "@/visualizationEngine/CircuitElement";
 
-type ElementTypes =
-  | GateTypes[number]
-  | "conductor"
-  | "input"
-  | "output"
-  | "blackBox";
+type ElementTypes = GateType | "conductor" | "input" | "output" | "blackBox";
 
 export const elementTypes = new ParticleEntity<
   Record<CircuitElementId, ElementTypes>
 >({});
 
 export const elementInstances = new ParticleEntity<
-  Record<CircuitElementId, DisplayObject>
+  Record<CircuitElementId, CircuitElement>
 >({});

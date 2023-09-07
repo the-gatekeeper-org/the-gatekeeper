@@ -1,5 +1,5 @@
 import { adaptEffect } from "promethium-js";
-import { Gate, GateTypes } from "./Gate";
+import { Gate, GateType } from "./Gate";
 import { stroke } from "@/colors";
 import { gateBodyDimensions } from "./dimensions";
 import { adjustOpacityOnInteract } from "../utils";
@@ -126,7 +126,7 @@ export default function buildGateBody(gate: Gate, part: Graphics) {
     width: gateBodyDimensions.strokeWidth,
     color: stroke["primary-dark"],
   });
-  const gateType = elementTypes.adaptParticle(gate.id)[0];
-  gateBodyBuilderFns[gateType() as GateTypes[number]](gate);
+  const gateType = elementTypes.adaptParticle(gate.id)[0]();
+  gateBodyBuilderFns[gateType as GateType](gate);
   adaptEffect(() => adjustOpacityOnInteract(gate, part));
 }

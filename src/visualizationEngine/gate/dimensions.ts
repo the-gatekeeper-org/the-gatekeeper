@@ -32,7 +32,6 @@ export const selectionRectangeDimensions = {
 export const inputTerminalDimensions = {
   strokeWidth: 2,
   origin_X: -10,
-  origin_Y: 0,
   terminalGap: 10,
   terminalRadius: 2,
 } as const;

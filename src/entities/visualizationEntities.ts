@@ -33,7 +33,7 @@ export type ConnectionPoint = IPointData & {
 export type ConnectionPoints = ConnectionPoint[];
 export type ConductorConnectionPoints = [ConnectionPoint, ConnectionPoint];
 
-// TODO: Add `prettierrc` with extended line character limit
+// TODO: add `prettierrc` with extended line character limit
 export const inputConnectionPoints = new ParticleEntity<
   Record<CircuitElementId, ConnectionPoints>
 >({});
@@ -44,4 +44,12 @@ export const outputConnectionPoints = new ParticleEntity<
 
 export const conductorConnectionPoints = new ParticleEntity<
   Record<CircuitElementId, ConductorConnectionPoints>
+>({});
+
+export const multipleConnectionPoints = new ParticleEntity<
+  Record<`${number}-${number}`, ConnectionPoints>
+>({});
+
+export const elementPositions = new ParticleEntity<
+  Record<CircuitElementId, IPointData>
 >({});

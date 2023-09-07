@@ -1,4 +1,4 @@
-// TODO: Revise colors
+// TODO: revise colors
 export const bg = {
   "primary-dark": "#0a0a0a",
   "secondary-dark": " #000000",

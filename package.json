@@ -4,19 +4,27 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"tsc --watch\"",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev:frontend": "concurrently \"vite\" \"tsc --watch\"",
+    "dev:backend": "nodemon -e go --signal SIGTERM --exec \"go run . -- dev\"",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "build:frontend": "tsc && vite build",
+    "build:backend": "go build -o bin/app",
+    "build": "npm run build:frontend && npm run build:backend",
+    "preview:frontend": "vite preview",
+    "photon-init": "npm install && go mod tidy && mkdir dist && mkdir bin && touch dist/index.html",
+    "start": "./bin/app"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
     "concurrently": "^8.2.0",
+    "nodemon": "^3.0.1",
     "postcss": "^8.4.24",
     "tailwindcss": "^3.3.2",
     "typescript": "^5.0.2",
     "vite": "^4.3.9"
   },
   "dependencies": {
+    "photon-lib-js": "^0.1.0",
     "pixi.js": "^7.2.4",
     "promethium-js": "^0.5.0"
   }

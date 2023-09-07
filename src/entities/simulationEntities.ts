@@ -1,16 +1,15 @@
-import { Getter, ParticleEntity } from "promethium-js";
+import { DerivativeEntity, Getter, ParticleEntity } from "promethium-js";
 import { CircuitElementId } from "./utils";
 
-type NodeValues = [0, 1, "pullUp", "pullDown", "pending", "error", "floating"];
+export type NodeBitValue = 0 | 1;
+export type NodeInput = NodeBitValue | CircuitElementId;
+export type NodeOutput = NodeBitValue | "floating";
+// type OtherNodeValues = "pullUp" |"pullDown" | "pending" | CircuitElementId | "error"
 
-export const nodeInputs = new ParticleEntity<
-  Record<CircuitElementId, CircuitElementId[]>
->({
-  "ce-4": ["ce-4", "ce-6"],
-});
+export const $nodeInputs = new ParticleEntity<
+  Record<CircuitElementId, NodeInput[]>
+>({});
 
-export const nodeOutputs = new ParticleEntity<
-  Record<CircuitElementId, Getter<NodeValues[number]>>
->({
-  "ce-4": () => "pending",
-});
+export const $nodeOutputs = new DerivativeEntity<
+  Record<CircuitElementId, Getter<NodeOutput>>
+>({});

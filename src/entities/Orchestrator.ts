@@ -7,10 +7,15 @@ import {
   gateOrchestration,
   inputOrchestration,
   outputOrchestration,
+  positionOrchestration,
 } from "./visualizationOrchestration";
 import { buttonOrchestration } from "./userInterfaceOrchestration";
+import SimulationEngine from "@/simulationEngine/SimulationEngine";
+import { simulationOrchestration } from "./simulationOrchestration";
+import { generalAppStateOrchestration } from "./generalAppStateOrchestration";
 
 export const visualizationEngine = new VisualizationEngine();
+export const simulationEngine = new SimulationEngine();
 
 const Orchestrator = new ActionEntity({
   init(canvas: HTMLCanvasElement) {
@@ -23,6 +28,9 @@ const Orchestrator = new ActionEntity({
   ...elementOrchestration,
   ...connectionPointOrchestration,
   ...buttonOrchestration,
+  ...simulationOrchestration,
+  ...generalAppStateOrchestration,
+  ...positionOrchestration,
 });
 
 export default Orchestrator;

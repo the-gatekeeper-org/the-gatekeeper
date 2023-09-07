@@ -2,7 +2,35 @@ import {
   ConductorConnectionPoints,
   ConductorPreviewCoordinates,
 } from "@/entities/visualizationEntities";
-import { ConductorOrientation } from "./Conductor";
+import { Conductor, ConductorOrientation } from "./Conductor";
+import { conductorBodyDimensions } from "./dimensions";
+import Orchestrator from "@/entities/Orchestrator";
+
+export function addConductorConnectionPoint(conductor: Conductor) {
+  const conductorOriginGlobalConnectionPoint = conductor.toGlobal({
+    x: conductorBodyDimensions.origin_X,
+    y: conductorBodyDimensions.origin_Y,
+  });
+  const conductorEndGlobalConnectionPoint = conductor.toGlobal(
+    conductor.conductorEndLocalConnectionPoint
+  );
+  Orchestrator.actions.addConductorConnectionPoints({
+    id: conductor.id,
+    connectionPoints: [
+      conductorOriginGlobalConnectionPoint,
+      conductorEndGlobalConnectionPoint,
+    ],
+  });
+}
+
+export function conductorSizeIsValid(
+  connectionPoints: ConductorConnectionPoints
+) {
+  return (
+    connectionPoints[1].x - connectionPoints[0].x !== 0 ||
+    connectionPoints[1].y - connectionPoints[0].y !== 0
+  );
+}
 
 export function directionHasRestarted(
   coordinates: ConductorPreviewCoordinates,
@@ -20,15 +48,6 @@ export function directionHasRestarted(
   }
 
   return hasRestarted;
-}
-
-export function conductorSizeIsValid(
-  connectionPoints: ConductorConnectionPoints
-) {
-  return (
-    connectionPoints[1].x - connectionPoints[0].x !== 0 ||
-    connectionPoints[1].y - connectionPoints[0].y !== 0
-  );
 }
 
 export function getConductorOrientationFromConnectionPoints(

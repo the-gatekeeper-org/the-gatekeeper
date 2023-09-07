@@ -6,6 +6,7 @@ export default defineConfig({
   /* Automatically open default browser */
   server: {
     open: true,
+    host: true,
   },
   /* Easy imports */
   resolve: {

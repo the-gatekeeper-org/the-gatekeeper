@@ -6,10 +6,18 @@ export const buttonOrchestration = {
   ) {
     buttonSelections.adaptParticle(id)[1](true);
   },
-  turnOffButtonSelections() {
+  turnOffButtonSelections(
+    exceptions?: Parameters<typeof buttonSelections.adaptParticle>[0][]
+  ) {
     Object.entries(buttonSelections.getParticles()).forEach(
-      ([_, [__, setButtonSelection]]) => {
-        setButtonSelection(false);
+      ([buttonSelectionId, [__, setButtonSelection]]) => {
+        let isException = false;
+        exceptions?.forEach((exception) => {
+          if (buttonSelectionId === exception) {
+            isException = true;
+          }
+        });
+        !isException && setButtonSelection(false);
       }
     );
   },

@@ -1,4 +1,5 @@
 type CAObject = { condition: boolean; action: (...args: any[]) => any };
+
 export function ca<T extends CAObject[] | CAObject>(
   caObject: T,
   altAction?: (...args: any[]) => any
