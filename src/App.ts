@@ -6,7 +6,7 @@ import { Gate } from "./visualizationEngine/gate/Gate";
 import { Input } from "./visualizationEngine/input/Input";
 import { Output } from "./visualizationEngine/output/Output";
 
-export const ipc = ipcInit("10.42.0.1:5172");
+export const ipc = ipcInit("192.168.43.17:5172");
 function App() {
   const canvasRef = createRef();
 
