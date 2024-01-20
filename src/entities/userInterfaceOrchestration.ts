@@ -2,15 +2,16 @@ import { buttonSelections } from "./userInterfaceEntities";
 
 export const buttonOrchestration = {
   turnOnButtonSelection(
-    id: Parameters<typeof buttonSelections.adaptParticle>[0]
+    id: Parameters<typeof buttonSelections.adaptParticle>[0],
   ) {
     buttonSelections.adaptParticle(id)[1](true);
   },
   turnOffButtonSelections(
-    exceptions?: Parameters<typeof buttonSelections.adaptParticle>[0][]
+    exceptions?: Parameters<typeof buttonSelections.adaptParticle>[0][],
   ) {
-    Object.entries(buttonSelections.getParticles()).forEach(
-      ([buttonSelectionId, [__, setButtonSelection]]) => {
+    buttonSelections
+      .adaptParticles()
+      .forEach(([buttonSelectionId, [__, setButtonSelection]]) => {
         let isException = false;
         exceptions?.forEach((exception) => {
           if (buttonSelectionId === exception) {
@@ -18,7 +19,6 @@ export const buttonOrchestration = {
           }
         });
         !isException && setButtonSelection(false);
-      }
-    );
+      });
   },
 };

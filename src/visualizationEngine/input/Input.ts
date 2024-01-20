@@ -40,9 +40,9 @@ export class Input extends CircuitElement {
   }
 
   protected addOutputConnectionPoint() {
-    const position = elementPositions.adaptParticle(this.id)[0];
+    const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.actions.clearOutputConnectionPoints({ id: this.id });
+      Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
       addOutputConnectionPoint(this, {
         x: outputTerminalDimensions.center_X,
         y: outputTerminalDimensions.center_Y,
@@ -53,7 +53,7 @@ export class Input extends CircuitElement {
   protected buildInputBody() {
     adaptEffect(() => {
       this.inputBody.clear();
-      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)();
+      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)!();
       if (nodeOutput === 0) {
         this.inputBody.beginFill("#FFA500", 1);
       } else {
@@ -67,7 +67,7 @@ export class Input extends CircuitElement {
         inputBodyDimensions.origin_X,
         inputBodyDimensions.origin_Y,
         inputBodyDimensions.width,
-        inputBodyDimensions.height
+        inputBodyDimensions.height,
       );
       adjustOpacityOnInteract(this, this.inputBody);
     });
@@ -80,7 +80,7 @@ export class Input extends CircuitElement {
       this.outputTerminal.drawCircle(
         outputTerminalDimensions.center_X,
         outputTerminalDimensions.center_Y,
-        outputTerminalDimensions.terminalRadius
+        outputTerminalDimensions.terminalRadius,
       );
       adjustOpacityOnInteract(this, this.outputTerminal);
     });
@@ -88,7 +88,7 @@ export class Input extends CircuitElement {
 
   protected buildOutputText() {
     adaptEffect(() => {
-      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)();
+      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)!();
       this.outputText.text = (nodeOutput as NodeBitValue).toString();
       this.outputText.x = 3;
       this.outputText.y = 2;
@@ -98,14 +98,14 @@ export class Input extends CircuitElement {
   protected buildSelectionRectangle() {
     adaptEffect(() => {
       this.genericBuildSelectionRectangleFunctionality(
-        selectionRectangeDimensions.strokeWidth
+        selectionRectangeDimensions.strokeWidth,
       );
       const { width, height } = this.getBounds();
       this.selectionRectangle.drawRect(
         selectionRectangeDimensions.origin_X,
         selectionRectangeDimensions.origin_Y,
         width + selectionRectangeDimensions.widthDelta,
-        height + selectionRectangeDimensions.heightDelta
+        height + selectionRectangeDimensions.heightDelta,
       );
     });
   }
@@ -134,7 +134,7 @@ export class Input extends CircuitElement {
     this.initOutputTerminal();
     this.initOutputText();
     this.genericInitFunctionality();
-    Orchestrator.actions.turnOnElementSelection(this.id);
+    Orchestrator.dispatch("turnOnElementSelection", this.id);
   }
 
   protected initInputBody() {
@@ -158,7 +158,7 @@ export class Input extends CircuitElement {
     if (simulatorClickMode === "selecting") {
       this.genericOnPointerDownFunctionality();
     } else if (simulatorClickMode === "simulating") {
-      Orchestrator.actions.toggleInputValue(this.id);
+      Orchestrator.dispatch("toggleInputValue", this.id);
       ipc.emit("action", { action: "toggleInputValue", options: this.id });
     }
   };
@@ -177,14 +177,14 @@ export class Input extends CircuitElement {
     if (simulatorClickMode === "selecting") {
       this.genericOnPointerUpFunctionality();
       const connectionPoints = outputConnectionPoints.adaptParticle(
-        this.id
-      )[0]();
+        this.id,
+      )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {
         const connectionPoint = connectionPoints[i];
         const conductorConnectionPointIdOrFalse =
           checkForCollisionWithConductorConnectionPoint(connectionPoint);
         if (conductorConnectionPointIdOrFalse) {
-          Orchestrator.actions.addNodeInput({
+          Orchestrator.dispatch("addNodeInput", {
             elementId: conductorConnectionPointIdOrFalse,
             nodeInput: this.id,
           });

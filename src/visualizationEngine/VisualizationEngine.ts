@@ -60,7 +60,7 @@ export class VisualizationEngine {
   protected addGate(options: Omit<GateOptions, "visualizationEngine">) {
     const gate = new Gate({ visualizationEngine: this, ...options });
     const { id, gateType } = options;
-    Orchestrator.actions.addGate({ id, gate, gateType });
+    Orchestrator.dispatch("addGate", { id, gate, gateType });
     ipc.emit("action", { action: "addGate", options });
     gate.init();
     this.stage.addChild(gate);
@@ -71,7 +71,7 @@ export class VisualizationEngine {
   protected addInput(options: Omit<InputOptions, "visualizationEngine">) {
     const input = new Input({ visualizationEngine: this, ...options });
     const { id } = options;
-    Orchestrator.actions.addInput({ id, input });
+    Orchestrator.dispatch("addInput", { id, input });
     ipc.emit("action", { action: "addInput", options });
     input.init();
     this.stage.addChild(input);
@@ -82,7 +82,7 @@ export class VisualizationEngine {
   protected addOutput(options: Omit<OutputOptions, "visualizationEngine">) {
     const output = new Output({ visualizationEngine: this, ...options });
     const { id } = options;
-    Orchestrator.actions.addOutput({ id, output });
+    Orchestrator.dispatch("addOutput", { id, output });
     ipc.emit("action", { action: "addOutput", options });
     output.init();
     this.stage.addChild(output);
@@ -111,14 +111,14 @@ export class VisualizationEngine {
         this.connectionPointSelectionCircle.drawCircle(
           x,
           y,
-          connectionPointSelectionCircleDimensions.radius
+          connectionPointSelectionCircleDimensions.radius,
         );
       }
     });
   }
 
   protected conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(
-    e: PointerEvent
+    e: PointerEvent,
   ) {
     const conductorPreviewIsBeingDrawn =
       conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
@@ -126,7 +126,7 @@ export class VisualizationEngine {
       conductorPreviewData.adaptParticle("coordinates")[0]();
     if (conductorPreviewIsBeingDrawn) {
       const pointerCoordinates = { x: round(e.x), y: round(e.y) };
-      Orchestrator.actions.updateConductorPreview({
+      Orchestrator.dispatch("updateConductorPreview", {
         previousCoordinates: conductorPreviewCoordinates.current,
         currentCoordinates: pointerCoordinates,
         startingCoordinates: conductorPreviewCoordinates.starting,
@@ -149,7 +149,7 @@ export class VisualizationEngine {
   protected conditionallyInitDrawingOfConductorPreviewVisuals(e: PointerEvent) {
     if (this.connectionPointIsBeingHoveredOver()) {
       const pointerCoordinates = { x: round(e.x), y: round(e.y) };
-      Orchestrator.actions.updateConductorPreview({
+      Orchestrator.dispatch("updateConductorPreview", {
         previousCoordinates: pointerCoordinates,
         currentCoordinates: pointerCoordinates,
         startingCoordinates: this.connectionPointSelectionCirclePosition(),
@@ -171,7 +171,7 @@ export class VisualizationEngine {
         const conductorPreviewIsBeingDrawn =
           conductorPreviewData.adaptParticle("isBeingDrawn")[0]();
         if (conductorPreviewIsBeingDrawn) {
-          Orchestrator.actions.turnOffAllElementSelections();
+          Orchestrator.dispatch("turnOffAllElementSelections", undefined);
         }
       });
     }
@@ -228,7 +228,7 @@ export class VisualizationEngine {
         sharedConnectionPoints,
         { x: coordinates.current!.x, y: coordinates.current!.y },
       ] as ConductorConnectionPoints;
-      const conductorId_1 = Orchestrator.actions.addConductor({
+      const conductorId_1 = Orchestrator.dispatch("addConductor", {
         globalConnectionPoints: globalConnectionPoints_1,
       });
       ipc.emit("action", {
@@ -238,7 +238,7 @@ export class VisualizationEngine {
           id: conductorId_1,
         },
       });
-      const conductorId_2 = Orchestrator.actions.addConductor({
+      const conductorId_2 = Orchestrator.dispatch("addConductor", {
         globalConnectionPoints: globalConnectionPoints_2,
       });
       ipc.emit("action", {
@@ -311,27 +311,27 @@ export class VisualizationEngine {
         const selectedElements =
           elementSelections.adaptParticle("selectedElements")[0]();
         selectedElements.forEach((selectedElement) => {
-          const elementType = elementTypes.adaptParticle(selectedElement)[0]();
+          const elementType = elementTypes.adaptParticle(selectedElement)![0]();
           if (elementType === "conductor") {
-            Orchestrator.actions.removeConductor(selectedElement);
+            Orchestrator.dispatch("removeConductor", selectedElement);
             ipc.emit("action", {
               action: "removeConductor",
               options: selectedElement,
             });
           } else if (elementType === "input") {
-            Orchestrator.actions.removeInput(selectedElement);
+            Orchestrator.dispatch("removeInput", selectedElement);
             ipc.emit("action", {
               action: "removeInput",
               options: selectedElement,
             });
           } else if (elementType === "output") {
-            Orchestrator.actions.removeOutput(selectedElement);
+            Orchestrator.dispatch("removeOutput", selectedElement);
             ipc.emit("action", {
               action: "removeOutput",
               options: selectedElement,
             });
           } else {
-            Orchestrator.actions.removeGate(selectedElement);
+            Orchestrator.dispatch("removeGate", selectedElement);
             ipc.emit("action", {
               action: "removeGate",
               options: selectedElement,
@@ -341,10 +341,10 @@ export class VisualizationEngine {
       }
     });
     this.renderer.view.addEventListener?.("pointerdown", (e) =>
-      this.onPointerDown(e as PointerEvent)
+      this.onPointerDown(e as PointerEvent),
     );
     this.renderer.view.addEventListener?.("pointerup", () =>
-      this.onPointerUp()
+      this.onPointerUp(),
     );
   }
 
@@ -362,7 +362,7 @@ export class VisualizationEngine {
         this.dragTargetOrigin.x + (e.screenX - this.dragOrigin.x);
       const newDragTarget_y =
         this.dragTargetOrigin.y + (e.screenY - this.dragOrigin.y);
-      Orchestrator.actions.changeElementPosition({
+      Orchestrator.dispatch("changeElementPosition", {
         id: this.dragTarget.id,
         x: newDragTarget_x,
         y: newDragTarget_y,
@@ -383,23 +383,25 @@ export class VisualizationEngine {
     this.conditionallySpawnNextGate(e);
     this.conditionallySpawnNextInput(e);
     this.conditionallySpawnNextOutput(e);
-    Orchestrator.actions.turnOffAllElementSelections();
-    Orchestrator.actions.turnOffButtonSelections(["select", "simulate"]);
+    Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+    Orchestrator.dispatch("turnOffButtonSelections", ["select", "simulate"]);
     const simulatorClickMode =
       $generalSimulatorState.adaptParticle("clickMode")[0]();
     if (simulatorClickMode === "other" || simulatorClickMode === "selecting") {
-      Orchestrator.actions.changeSimulatorClickMode("selecting");
-      Orchestrator.actions.turnOnButtonSelection("select");
+      Orchestrator.dispatch("changeSimulatorClickMode", "selecting");
+      Orchestrator.dispatch("turnOnButtonSelection", "select");
     } else {
-      Orchestrator.actions.changeSimulatorClickMode("simulating");
-      Orchestrator.actions.turnOnButtonSelection("simulate");
+      Orchestrator.dispatch("changeSimulatorClickMode", "simulating");
+      Orchestrator.dispatch("turnOnButtonSelection", "simulate");
     }
     this.conditionallyInitDrawingOfConductorPreviewVisuals(e);
   }
 
   protected onPointerUp() {
+    console.log("Here, viz engine!");
+
     this.conditionallySpawnPreviewConductors();
-    Orchestrator.actions.updateConductorPreview({
+    Orchestrator.dispatch("updateConductorPreview", {
       previousCoordinates: null,
       currentCoordinates: null,
       startingCoordinates: null,
@@ -431,7 +433,7 @@ export class VisualizationEngine {
   }
 
   prepareToAddGate(
-    options: Pick<GateOptions, "gateType" | "noOfInputs" | "id">
+    options: Pick<GateOptions, "gateType" | "noOfInputs" | "id">,
   ) {
     this.nullifyNextCircuitElementsToAdd();
     this.optionsOfNextGateToAdd = {

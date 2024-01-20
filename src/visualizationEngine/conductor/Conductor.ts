@@ -90,9 +90,9 @@ export class Conductor extends CircuitElement {
   }
 
   protected addConductorConnectionPoints() {
-    const position = elementPositions.adaptParticle(this.id)[0];
+    const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.actions.clearOutputConnectionPoints({ id: this.id });
+      Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
       addConductorConnectionPoint(this);
     }, [position]);
   }
@@ -100,8 +100,8 @@ export class Conductor extends CircuitElement {
   protected setConductorEndGlobalConnectionPoint() {
     adaptEffect(() => {
       const connectionPoints = conductorConnectionPoints.adaptParticle(
-        this.id
-      )[0]();
+        this.id,
+      )![0]();
       this.conductorEndLocalConnectionPoint = this.toLocal(connectionPoints[1]);
     });
   }
@@ -110,8 +110,8 @@ export class Conductor extends CircuitElement {
     adaptEffect(() => {
       this.conductorBody.clear();
       const connectionPoints = conductorConnectionPoints.adaptParticle(
-        this.id
-      )[0]();
+        this.id,
+      )![0]();
       if (connectionPoints[0] && connectionPoints[1]) {
         const origin = this.toLocal(connectionPoints[0]);
         const end = this.toLocal(connectionPoints[1]);
@@ -130,11 +130,11 @@ export class Conductor extends CircuitElement {
   protected buildSelectionRectangle() {
     adaptEffect(() => {
       this.genericBuildSelectionRectangleFunctionality(
-        selectionRectangeDimensions.strokeWidth
+        selectionRectangeDimensions.strokeWidth,
       );
       const connectionPoints = conductorConnectionPoints.adaptParticle(
-        this.id
-      )[0]();
+        this.id,
+      )![0]();
       if (connectionPoints[0] && connectionPoints[1]) {
         const orientation =
           getConductorOrientationFromConnectionPoints(connectionPoints);
@@ -162,7 +162,7 @@ export class Conductor extends CircuitElement {
                   origin_Y =
                     selectionRectangeDimensions.origin_Y -
                     selectionRectangeDimensions.originFixDelta;
-                }
+                },
               );
             },
           },
@@ -182,16 +182,16 @@ export class Conductor extends CircuitElement {
                   selectionRectangeDimensions.origin_X -
                   selectionRectangeDimensions.originFixDelta;
                 origin_Y = selectionRectangeDimensions.origin_Y - length;
-              }
+              },
             );
-          }
+          },
         );
         const { width, height } = this.getBounds();
         this.selectionRectangle.drawRect(
           origin_X!,
           origin_Y!,
           width + selectionRectangeDimensions.widthDelta,
-          height + selectionRectangeDimensions.heightDelta
+          height + selectionRectangeDimensions.heightDelta,
         );
       }
     });

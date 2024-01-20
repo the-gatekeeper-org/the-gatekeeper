@@ -58,10 +58,10 @@ export class Gate extends CircuitElement {
   }
 
   protected addInputConnectionPoints() {
-    const position = elementPositions.adaptParticle(this.id)[0];
+    const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.actions.clearInputConnectionPoints({ id: this.id });
-      const gateType = elementTypes.adaptParticle(this.id)[0]();
+      Orchestrator.dispatch("clearInputConnectionPoints", { id: this.id });
+      const gateType = elementTypes.adaptParticle(this.id)![0]();
       const isNoOfInputsOdd = () => this.noOfInputs() % 2 !== 0;
       if (gateType === "not") {
         this.inputTerminalsOrigin_Y = 0;
@@ -93,9 +93,11 @@ export class Gate extends CircuitElement {
   }
 
   protected addOutputConnectionPoint() {
-    const position = elementPositions.adaptParticle(this.id)[0];
+    const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.actions.clearOutputConnectionPoints({ id: this.id });
+      console.log("here in effect!");
+
+      Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
       const localConnectionPoint = this.getOutputTerminalLocalConnectionPoint();
       addOutputConnectionPoint(this, localConnectionPoint);
     }, [position]);
@@ -110,14 +112,14 @@ export class Gate extends CircuitElement {
       this.inputTerminals.clear();
       this.inputTerminals.beginFill(stroke["primary-dark"]);
       const connectionPoints = inputConnectionPoints.adaptParticle(
-        this.id
-      )[0]();
+        this.id,
+      )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {
         const localConnectionPoint = this.toLocal(connectionPoints[i]);
         this.inputTerminals.drawCircle(
           localConnectionPoint.x,
           localConnectionPoint.y,
-          inputTerminalDimensions.terminalRadius
+          inputTerminalDimensions.terminalRadius,
         );
       }
       if (this.inputTerminalsOrigin_Y !== this.inputTerminalsEnd_Y) {
@@ -141,7 +143,7 @@ export class Gate extends CircuitElement {
       this.outputTerminal.drawCircle(
         localConnectionPoint.x,
         localConnectionPoint.y,
-        outputTerminalDimensions.terminalRadius
+        outputTerminalDimensions.terminalRadius,
       );
       adjustOpacityOnInteract(this, this.outputTerminal);
     });
@@ -155,7 +157,7 @@ export class Gate extends CircuitElement {
   protected buildSelectionRectangle() {
     adaptEffect(() => {
       this.genericBuildSelectionRectangleFunctionality(
-        selectionRectangeDimensions.strokeWidth
+        selectionRectangeDimensions.strokeWidth,
       );
       // if the input terminals are lower than the gateBody, then the `selectionRectange` should be at the level of the gateBody instead (this occurs when the `noOfInputs` is less than 6)
       const origin_Y = this.noOfInputs() >= 5 ? this.inputTerminalsOrigin_Y : 0;
@@ -164,7 +166,7 @@ export class Gate extends CircuitElement {
         selectionRectangeDimensions.origin_X,
         origin_Y + selectionRectangeDimensions.originDelta_Y,
         width + selectionRectangeDimensions.widthDelta,
-        height + selectionRectangeDimensions.heightDelta
+        height + selectionRectangeDimensions.heightDelta,
       );
     });
   }
@@ -198,7 +200,7 @@ export class Gate extends CircuitElement {
   }
 
   protected getOutputTerminalLocalConnectionPoint() {
-    const gateType = elementTypes.adaptParticle(this.id)[0]();
+    const gateType = elementTypes.adaptParticle(this.id)![0]();
     const circle_Y = gateType === "not" ? "midPoint_Y_not" : "midPoint_Y";
     const x =
       gateBodyDimensions.end_X +
@@ -213,7 +215,7 @@ export class Gate extends CircuitElement {
     this.addOutputConnectionPoint();
     this.initGateTerminals();
     this.genericInitFunctionality();
-    Orchestrator.actions.turnOnElementSelection(this.id);
+    Orchestrator.dispatch("turnOnElementSelection", this.id);
   }
 
   protected initGateBody() {
@@ -244,6 +246,8 @@ export class Gate extends CircuitElement {
   };
 
   protected onPointerUp = () => {
+    console.log("Here, gate!");
+
     const simulatorClickMode =
       $generalSimulatorState.adaptParticle("clickMode")[0]();
     if (simulatorClickMode === "selecting") {
@@ -252,14 +256,14 @@ export class Gate extends CircuitElement {
       // use `setTimeout` to ensure that operation runs only after all new conductors have been spawned from existing `conductorPreviews`
       setTimeout(() => {
         const connectionPoints = inputConnectionPoints.adaptParticle(
-          this.id
-        )[0]();
+          this.id,
+        )![0]();
         for (let i = 0; i < connectionPoints.length; i++) {
           const connectionPoint = connectionPoints[i];
           const conductorConnectionPointIdOrFalse =
             checkForCollisionWithConductorConnectionPoint(connectionPoint);
           if (conductorConnectionPointIdOrFalse) {
-            Orchestrator.actions.addNodeInput({
+            Orchestrator.dispatch("addNodeInput", {
               elementId: this.id,
               nodeInput: conductorConnectionPointIdOrFalse,
               position: i,
@@ -277,13 +281,13 @@ export class Gate extends CircuitElement {
       });
       setTimeout(() => {
         const connectionPoints = outputConnectionPoints.adaptParticle(
-          this.id
-        )[0]();
+          this.id,
+        )![0]();
         const connectionPoint = connectionPoints[0];
         const conductorConnectionPointIdOrFalse =
           checkForCollisionWithConductorConnectionPoint(connectionPoint);
         if (conductorConnectionPointIdOrFalse) {
-          Orchestrator.actions.addNodeInput({
+          Orchestrator.dispatch("addNodeInput", {
             elementId: conductorConnectionPointIdOrFalse,
             nodeInput: this.id,
           });

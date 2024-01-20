@@ -4,15 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev:frontend": "concurrently \"vite\" \"tsc --watch\"",
-    "dev:backend": "nodemon -e go --signal SIGTERM --exec \"go run . -- dev\"",
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "build:frontend": "tsc && vite build",
-    "build:backend": "go build -o bin/app",
-    "build": "npm run build:frontend && npm run build:backend",
-    "preview:frontend": "vite preview",
-    "photon-init": "npm install && go mod tidy && mkdir dist && mkdir bin && touch dist/index.html",
-    "start": "./bin/app"
+    "client:dev": "concurrently \"vite\" \"tsc --watch\"",
+    "client:build": "tsc && vite build",
+    "client:preview": "vite preview",
+    "server:dev": "nodemon -e go --signal SIGTERM --exec \"go run . -- dev\"",
+    "server:build": "go build -o bin/app",
+    "dev": "concurrently \"pnpm run client:dev\" \"pnpm run server:dev\"",
+    "build": "pnpm run client:build && npm run server:build",
+    "install": "go mod tidy",
+    "app:preview": "./bin/app"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
@@ -24,8 +24,9 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
+    "lit": "^3.1.1",
     "photon-lib-js": "^0.1.0",
     "pixi.js": "^7.2.4",
-    "promethium-js": "^0.5.0"
+    "promethium-js": "^0.8.1"
   }
 }

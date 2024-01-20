@@ -1,4 +1,6 @@
-import { h, html, map } from "promethium-js";
+import { h } from "promethium-js";
+import { html } from "lit";
+import { map } from "lit/directives/map.js";
 import Button from "./Button";
 import Orchestrator from "@/entities/Orchestrator";
 
@@ -6,79 +8,79 @@ const buttons: Parameters<typeof Button>[0][] = [
   {
     text: "S",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("selecting");
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("select");
+      Orchestrator.dispatch("changeSimulatorClickMode", "selecting");
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "select");
     },
     id: "select",
   },
   {
     text: "Q",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("simulating");
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("simulate");
-      Orchestrator.actions.turnOffAllElementSelections();
+      Orchestrator.dispatch("changeSimulatorClickMode", "simulating");
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "simulate");
+      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
     },
     id: "simulate",
   },
   {
     text: "I",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("other");
-      Orchestrator.actions.prepareToAddInput();
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("input");
-      Orchestrator.actions.turnOffAllElementSelections();
+      Orchestrator.dispatch("changeSimulatorClickMode", "other");
+      Orchestrator.dispatch("prepareToAddInput", undefined);
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "input");
+      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
     },
     id: "input",
   },
   {
     text: "Y",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("other");
-      Orchestrator.actions.prepareToAddOutput();
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("output");
-      Orchestrator.actions.turnOffAllElementSelections();
+      Orchestrator.dispatch("changeSimulatorClickMode", "other");
+      Orchestrator.dispatch("prepareToAddOutput", undefined);
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "output");
+      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
     },
     id: "output",
   },
   {
     text: "A",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("other");
-      Orchestrator.actions.prepareToAddGate({ gateType: "and" });
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("and");
-      Orchestrator.actions.turnOffAllElementSelections();
+      Orchestrator.dispatch("changeSimulatorClickMode", "other");
+      Orchestrator.dispatch("prepareToAddGate", { gateType: "and" });
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "and");
+      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
     },
     id: "and",
   },
   {
     text: "O",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("other");
-      Orchestrator.actions.prepareToAddGate({
+      Orchestrator.dispatch("changeSimulatorClickMode", "other");
+      Orchestrator.dispatch("prepareToAddGate", {
         gateType: "or",
         noOfInputs: 2,
       });
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("or");
-      Orchestrator.actions.turnOffAllElementSelections();
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "or");
+      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
     },
     id: "or",
   },
   {
     text: "N",
     onClick: () => {
-      Orchestrator.actions.changeSimulatorClickMode("other");
-      Orchestrator.actions.prepareToAddGate({
+      Orchestrator.dispatch("changeSimulatorClickMode", "other");
+      Orchestrator.dispatch("prepareToAddGate", {
         gateType: "not",
       });
-      Orchestrator.actions.turnOffButtonSelections();
-      Orchestrator.actions.turnOnButtonSelection("not");
-      Orchestrator.actions.turnOffAllElementSelections();
+      Orchestrator.dispatch("turnOffButtonSelections", undefined);
+      Orchestrator.dispatch("turnOnButtonSelection", "not");
+      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
     },
     id: "not",
   },
@@ -97,7 +99,7 @@ function Toolbar() {
             text: props.text,
             onClick: props.onClick,
             id: props.id,
-          })
+          }),
         )}
       </div>
       ${h(Button, { type: "primary", text: "?" })}

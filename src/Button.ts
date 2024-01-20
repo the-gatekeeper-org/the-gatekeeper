@@ -1,4 +1,5 @@
-import { classMap, html } from "promethium-js";
+import { html } from "lit";
+import { classMap } from "lit/directives/class-map.js";
 import { buttonSelections } from "@/entities/userInterfaceEntities";
 
 function Button(props: {

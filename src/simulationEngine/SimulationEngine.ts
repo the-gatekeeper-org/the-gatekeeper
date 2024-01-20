@@ -10,10 +10,10 @@ export default class SimulationEngine {
   constructor() {}
 
   getActualOutput_Output(id: CircuitElementId) {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput = nodeInputs[0];
 
-    return $nodeOutputs.adaptDerivative(nodeInput as CircuitElementId)();
+    return $nodeOutputs.adaptDerivative(nodeInput as CircuitElementId)!();
   }
 
   evaluate_Gate(gateType: GateType, id: CircuitElementId) {
@@ -21,7 +21,7 @@ export default class SimulationEngine {
   }
 
   evaluate_Input(id: CircuitElementId) {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
 
     return nodeInputs[0] as NodeBitValue;
   }
@@ -31,12 +31,12 @@ export default class SimulationEngine {
   }
 
   evaluate_Conductor(id: CircuitElementId) {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     for (let i = 0; i < nodeInputs.length; i++) {
       const nodeInput = nodeInputs[i];
       const nodeInput_Output = $nodeOutputs.adaptDerivative(
-        nodeInput as CircuitElementId
-      )();
+        nodeInput as CircuitElementId,
+      )!();
       if (nodeInput_Output === 0 || nodeInput_Output === 1) {
         return nodeInput_Output;
       }

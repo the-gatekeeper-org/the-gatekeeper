@@ -17,15 +17,15 @@ const xnor = (a: NodeBitValue, b: NodeBitValue) => not(xor(a, b));
 // TODO: make `createParticle` method for particle entities
 const gateEvaluatorFns = {
   and: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
     const nodeInput_1_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_1 as CircuitElementId
-    )();
+      nodeInput_1 as CircuitElementId,
+    )!();
     const nodeInput_2_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_2 as CircuitElementId
-    )();
+      nodeInput_2 as CircuitElementId,
+    )!();
     if (
       nodeInput_1_Output === "floating" ||
       nodeInput_2_Output === "floating"
@@ -36,15 +36,15 @@ const gateEvaluatorFns = {
     }
   },
   or: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
     const nodeInput_1_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_1 as CircuitElementId
-    )();
+      nodeInput_1 as CircuitElementId,
+    )!();
     const nodeInput_2_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_2 as CircuitElementId
-    )();
+      nodeInput_2 as CircuitElementId,
+    )!();
     if (
       nodeInput_1_Output === "floating" ||
       nodeInput_2_Output === "floating"
@@ -55,11 +55,11 @@ const gateEvaluatorFns = {
     }
   },
   not: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput = nodeInputs[0];
     const nodeInput_Output = $nodeOutputs.adaptDerivative(
-      nodeInput as CircuitElementId
-    )();
+      nodeInput as CircuitElementId,
+    )!();
     if (nodeInput_Output === "floating") {
       return "floating" as const;
     } else {
@@ -67,15 +67,15 @@ const gateEvaluatorFns = {
     }
   },
   nand: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
     const nodeInput_1_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_1 as CircuitElementId
-    )();
+      nodeInput_1 as CircuitElementId,
+    )!();
     const nodeInput_2_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_2 as CircuitElementId
-    )();
+      nodeInput_2 as CircuitElementId,
+    )!();
     if (
       nodeInput_1_Output === "floating" ||
       nodeInput_2_Output === "floating"
@@ -86,15 +86,15 @@ const gateEvaluatorFns = {
     }
   },
   nor: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
     const nodeInput_1_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_1 as CircuitElementId
-    )();
+      nodeInput_1 as CircuitElementId,
+    )!();
     const nodeInput_2_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_2 as CircuitElementId
-    )();
+      nodeInput_2 as CircuitElementId,
+    )!();
     if (
       nodeInput_1_Output === "floating" ||
       nodeInput_2_Output === "floating"
@@ -105,15 +105,15 @@ const gateEvaluatorFns = {
     }
   },
   xor: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
     const nodeInput_1_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_1 as CircuitElementId
-    )();
+      nodeInput_1 as CircuitElementId,
+    )!();
     const nodeInput_2_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_2 as CircuitElementId
-    )();
+      nodeInput_2 as CircuitElementId,
+    )!();
     if (
       nodeInput_1_Output === "floating" ||
       nodeInput_2_Output === "floating"
@@ -124,15 +124,15 @@ const gateEvaluatorFns = {
     }
   },
   xnor: (id: CircuitElementId) => {
-    const nodeInputs = $nodeInputs.adaptParticle(id)[0]();
+    const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
     const nodeInput_1_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_1 as CircuitElementId
-    )();
+      nodeInput_1 as CircuitElementId,
+    )!();
     const nodeInput_2_Output = $nodeOutputs.adaptDerivative(
-      nodeInput_2 as CircuitElementId
-    )();
+      nodeInput_2 as CircuitElementId,
+    )!();
     if (
       nodeInput_1_Output === "floating" ||
       nodeInput_2_Output === "floating"
@@ -146,7 +146,7 @@ const gateEvaluatorFns = {
 
 export default function evaluate_Gate(
   gateType: GateType,
-  id: CircuitElementId
+  id: CircuitElementId,
 ) {
   return gateEvaluatorFns[gateType](id);
 }

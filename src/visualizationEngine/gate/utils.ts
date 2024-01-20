@@ -7,7 +7,7 @@ export function addInputConnectionPoint(gate: Gate, index: number) {
   const y =
     gate.inputTerminalsOrigin_Y + index * inputTerminalDimensions.terminalGap;
   const globalConnectionPoint = gate.toGlobal({ x, y });
-  Orchestrator.actions.addInputConnectionPoint({
+  Orchestrator.dispatch("addInputConnectionPoint", {
     id: gate.id,
     connectionPoint: globalConnectionPoint,
   });

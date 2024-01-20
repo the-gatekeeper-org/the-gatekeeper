@@ -17,7 +17,7 @@ export function round(dimension: number) {
 
 export function adjustOpacityOnInteract(
   circuitElement: CircuitElement,
-  part: Graphics
+  part: Graphics,
 ) {
   if (circuitElement.isBeingDragged()) {
     part.alpha = 0.5;
@@ -28,10 +28,10 @@ export function adjustOpacityOnInteract(
 
 export function addInputConnectionPoint(
   circuitElement: CircuitElement,
-  connectionPoint: IPointData
+  connectionPoint: IPointData,
 ) {
   const globalConnectionPoint = circuitElement.toGlobal(connectionPoint);
-  Orchestrator.actions.addInputConnectionPoint({
+  Orchestrator.dispatch("addInputConnectionPoint", {
     id: circuitElement.id,
     connectionPoint: globalConnectionPoint,
   });
@@ -39,10 +39,10 @@ export function addInputConnectionPoint(
 
 export function addOutputConnectionPoint(
   circuitElement: CircuitElement,
-  connectionPoint: IPointData
+  connectionPoint: IPointData,
 ) {
   const globalConnectionPoint = circuitElement.toGlobal(connectionPoint);
-  Orchestrator.actions.addOutputConnectionPoint({
+  Orchestrator.dispatch("addOutputConnectionPoint", {
     id: circuitElement.id,
     connectionPoint: globalConnectionPoint,
   });
@@ -50,7 +50,7 @@ export function addOutputConnectionPoint(
 
 function connectionPointIsBeingHoverOver(
   connectionPoints: ConnectionPoints,
-  hoverPoint: IPointData
+  hoverPoint: IPointData,
 ) {
   for (let i = 0; i < connectionPoints.length; i++) {
     const connectionPoint = connectionPoints[i];
@@ -67,45 +67,48 @@ function connectionPointIsBeingHoverOver(
 
 export function inputConnectionPointIsBeingHoveredOver(
   circuitElement: CircuitElement,
-  hoverPoint: IPointData
+  hoverPoint: IPointData,
 ) {
   const connectionPoints = inputConnectionPoints.adaptParticle(
-    circuitElement.id
-  )[0]();
+    circuitElement.id,
+  )![0]();
+
   return connectionPointIsBeingHoverOver(connectionPoints, hoverPoint);
 }
 
 export function outputConnectionPointIsBeingHoveredOver(
   circuitElement: CircuitElement,
-  hoverPoint: IPointData
+  hoverPoint: IPointData,
 ) {
   const connectionPoints = outputConnectionPoints.adaptParticle(
-    circuitElement.id
-  )[0]();
+    circuitElement.id,
+  )![0]();
+
   return connectionPointIsBeingHoverOver(connectionPoints, hoverPoint);
 }
 
 export function conductorConnectionPointIsBeingHoveredOver(
   conductor: Conductor,
-  hoverPoint: IPointData
+  hoverPoint: IPointData,
 ) {
   const connectionPoints = conductorConnectionPoints.adaptParticle(
-    conductor.id
-  )[0]();
+    conductor.id,
+  )![0]();
+
   return connectionPointIsBeingHoverOver(connectionPoints, hoverPoint);
 }
 
 export function checkForCollisionWithConductorConnectionPoint(
-  checkPoint: IPointData
+  checkPoint: IPointData,
 ) {
   const conductorConnectionPointsIds = Object.keys(
-    conductorConnectionPoints.getParticles()
+    conductorConnectionPoints.adaptParticleValues(),
   ) as CircuitElementId[];
   for (let i = 0; i < conductorConnectionPointsIds.length; i++) {
     const conductorConnectionPointsId = conductorConnectionPointsIds[i];
     const connectionPoints = conductorConnectionPoints.adaptParticle(
-      conductorConnectionPointsId
-    )[0]();
+      conductorConnectionPointsId,
+    )![0]();
     for (let j = 0; j < connectionPoints.length; j++) {
       const connectionPoint = connectionPoints[j];
       if (

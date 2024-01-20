@@ -1,4 +1,6 @@
-import { adaptEffect, createRef, h, html, ref } from "promethium-js";
+import { adaptEffect, h } from "promethium-js";
+import { html } from "lit";
+import { createRef, ref } from "lit/directives/ref.js";
 import Toolbar from "./Toolbar";
 import Orchestrator, { visualizationEngine } from "./entities/Orchestrator";
 import { ipcInit } from "photon-lib-js";
@@ -6,7 +8,7 @@ import { Gate } from "./visualizationEngine/gate/Gate";
 import { Input } from "./visualizationEngine/input/Input";
 import { Output } from "./visualizationEngine/output/Output";
 
-export const ipc = ipcInit("192.168.43.17:5172");
+export const ipc = ipcInit("5172");
 function App() {
   const canvasRef = createRef();
 
@@ -19,7 +21,7 @@ function App() {
         case "addGate": {
           const gate = new Gate({ visualizationEngine, ...payload.options });
           const { id, gateType } = payload.options;
-          Orchestrator.actions.addGate({ id, gate, gateType });
+          Orchestrator.dispatch("addGate", { id, gate, gateType });
           gate.init();
           visualizationEngine.stage.addChild(gate);
           break;
@@ -27,7 +29,7 @@ function App() {
         case "addInput": {
           const input = new Input({ visualizationEngine, ...payload.options });
           const { id } = payload.options;
-          Orchestrator.actions.addInput({ id, input });
+          Orchestrator.dispatch("addInput", { id, input });
           input.init();
           visualizationEngine.stage.addChild(input);
           break;
@@ -38,7 +40,7 @@ function App() {
             ...payload.options,
           });
           const { id } = payload.options;
-          Orchestrator.actions.addOutput({ id, output });
+          Orchestrator.dispatch("addOutput", { id, output });
           output.init();
           visualizationEngine.stage.addChild(output);
           break;
@@ -48,35 +50,35 @@ function App() {
         //   break;
         // }
         case "addConductor": {
-          Orchestrator.actions.addConductor(payload.options);
+          Orchestrator.dispatch("addConductor", payload.options);
           break;
         }
         case "removeConductor": {
-          Orchestrator.actions.removeConductor(payload.options);
+          Orchestrator.dispatch("removeConductor", payload.options);
           break;
         }
         case "removeInput": {
-          Orchestrator.actions.removeInput(payload.options);
+          Orchestrator.dispatch("removeInput", payload.options);
           break;
         }
         case "removeOutput": {
-          Orchestrator.actions.removeOutput(payload.options);
+          Orchestrator.dispatch("removeOutput", payload.options);
           break;
         }
         case "removeGate": {
-          Orchestrator.actions.removeGate(payload.options);
+          Orchestrator.dispatch("removeGate", payload.options);
           break;
         }
         case "changeElementPosition": {
-          Orchestrator.actions.changeElementPosition(payload.options);
+          Orchestrator.dispatch("changeElementPosition", payload.options);
           break;
         }
         case "addNodeInput": {
-          Orchestrator.actions.addNodeInput(payload.options);
+          Orchestrator.dispatch("addNodeInput", payload.options);
           break;
         }
         case "toggleInputValue": {
-          Orchestrator.actions.toggleInputValue(payload.options);
+          Orchestrator.dispatch("toggleInputValue", payload.options);
           break;
         }
       }
@@ -84,7 +86,7 @@ function App() {
   }, []);
 
   adaptEffect(() => {
-    Orchestrator.actions.init(canvasRef.value as HTMLCanvasElement);
+    Orchestrator.dispatch("init", canvasRef.value as HTMLCanvasElement);
   }, []);
 
   return () => html`

@@ -12,9 +12,9 @@ export function addConductorConnectionPoint(conductor: Conductor) {
     y: conductorBodyDimensions.origin_Y,
   });
   const conductorEndGlobalConnectionPoint = conductor.toGlobal(
-    conductor.conductorEndLocalConnectionPoint
+    conductor.conductorEndLocalConnectionPoint,
   );
-  Orchestrator.actions.addConductorConnectionPoints({
+  Orchestrator.dispatch("addConductorConnectionPoints", {
     id: conductor.id,
     connectionPoints: [
       conductorOriginGlobalConnectionPoint,
@@ -24,7 +24,7 @@ export function addConductorConnectionPoint(conductor: Conductor) {
 }
 
 export function conductorSizeIsValid(
-  connectionPoints: ConductorConnectionPoints
+  connectionPoints: ConductorConnectionPoints,
 ) {
   return (
     connectionPoints[1].x - connectionPoints[0].x !== 0 ||
@@ -34,7 +34,7 @@ export function conductorSizeIsValid(
 
 export function directionHasRestarted(
   coordinates: ConductorPreviewCoordinates,
-  direction: "x" | "y"
+  direction: "x" | "y",
 ) {
   let hasRestarted = false;
   if (coordinates.current![direction] >= coordinates.previous![direction]) {
@@ -51,7 +51,7 @@ export function directionHasRestarted(
 }
 
 export function getConductorOrientationFromConnectionPoints(
-  connectionPoints: ConductorConnectionPoints
+  connectionPoints: ConductorConnectionPoints,
 ) {
   return (
     connectionPoints[1].x - connectionPoints[0].x !== 0 ? "h" : "v"
@@ -59,7 +59,7 @@ export function getConductorOrientationFromConnectionPoints(
 }
 
 export function getConductorLengthFromConnectionPoints(
-  connectionPoints: ConductorConnectionPoints
+  connectionPoints: ConductorConnectionPoints,
 ) {
   const orientation =
     getConductorOrientationFromConnectionPoints(connectionPoints);
@@ -72,7 +72,7 @@ export function getConductorLengthFromConnectionPoints(
 }
 
 export function getConductorDirectionFromConnectionPoints(
-  connectionPoints: ConductorConnectionPoints
+  connectionPoints: ConductorConnectionPoints,
 ) {
   const orientation =
     getConductorOrientationFromConnectionPoints(connectionPoints);

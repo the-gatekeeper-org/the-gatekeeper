@@ -26,7 +26,7 @@ export abstract class CircuitElement extends Container {
   constructor(options: CircuitElementOptions) {
     super();
     this.visualizationEngine = options.visualizationEngine;
-    const position = elementPositions.adaptParticle(options.id, {
+    const position = elementPositions.createParticle(options.id, {
       x: options.x,
       y: options.y,
     })[0];
@@ -39,7 +39,7 @@ export abstract class CircuitElement extends Container {
   protected abstract buildSelectionRectangle(): void;
 
   protected abstract conditionallyDrawConnectionPointCircle(
-    e: PointerEvent
+    e: PointerEvent,
   ): void;
 
   protected dragEnd() {
@@ -71,7 +71,7 @@ export abstract class CircuitElement extends Container {
   protected genericBuildSelectionRectangleFunctionality(strokeWidth: number) {
     this.selectionRectangle.clear();
     if (!this.isBeingDragged()) {
-      const isSelected = elementSelections.adaptParticle(this.id)[0];
+      const isSelected = elementSelections.adaptParticle(this.id)![0];
       if (isSelected()) {
         this.selectionRectangle.lineStyle({
           width: strokeWidth,
@@ -85,7 +85,7 @@ export abstract class CircuitElement extends Container {
   protected genericInitFunctionality() {
     this.initSelectionRectangle();
     this.cullable = true;
-    Orchestrator.actions.turnOffAllElementSelections();
+    Orchestrator.dispatch("turnOffAllElementSelections", undefined);
   }
 
   protected genericDetonateFunctionality() {
@@ -95,8 +95,8 @@ export abstract class CircuitElement extends Container {
 
   protected genericOnPointerDownFunctionality() {
     this.dragStart();
-    Orchestrator.actions.turnOffAllElementSelections(this.id);
-    Orchestrator.actions.toggleElementSelection(this.id);
+    Orchestrator.dispatch("turnOffAllElementSelections", this.id);
+    Orchestrator.dispatch("toggleElementSelection", this.id);
   }
 
   protected genericOnPointerMoveFunctionality(e: PointerEvent) {
@@ -108,7 +108,7 @@ export abstract class CircuitElement extends Container {
     this.dragEnd();
     if (this.isBeingDragged()) {
       this.isBeingDragged(false);
-      Orchestrator.actions.turnOnElementSelection(this.id);
+      Orchestrator.dispatch("turnOnElementSelection", this.id);
     }
   }
 

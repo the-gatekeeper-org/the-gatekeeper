@@ -40,9 +40,9 @@ export class Output extends CircuitElement {
   }
 
   protected addInputConnectionPoint() {
-    const position = elementPositions.adaptParticle(this.id)[0];
+    const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.actions.clearInputConnectionPoints({ id: this.id });
+      Orchestrator.dispatch("clearInputConnectionPoints", { id: this.id });
       addInputConnectionPoint(this, {
         x: inputTerminalDimensions.center_X,
         y: inputTerminalDimensions.center_Y,
@@ -57,7 +57,7 @@ export class Output extends CircuitElement {
       this.inputTerminal.drawCircle(
         inputTerminalDimensions.center_X,
         inputTerminalDimensions.center_Y,
-        inputTerminalDimensions.terminalRadius
+        inputTerminalDimensions.terminalRadius,
       );
       adjustOpacityOnInteract(this, this.inputTerminal);
     });
@@ -81,7 +81,7 @@ export class Output extends CircuitElement {
       this.outputBody.drawCircle(
         outputBodyDimensions.center_X,
         outputBodyDimensions.center_Y,
-        outputBodyDimensions.radius
+        outputBodyDimensions.radius,
       );
       adjustOpacityOnInteract(this, this.outputBody);
     });
@@ -103,14 +103,14 @@ export class Output extends CircuitElement {
   protected buildSelectionRectangle() {
     adaptEffect(() => {
       this.genericBuildSelectionRectangleFunctionality(
-        selectionRectangeDimensions.strokeWidth
+        selectionRectangeDimensions.strokeWidth,
       );
       const { width, height } = this.getBounds();
       this.selectionRectangle.drawRect(
         selectionRectangeDimensions.origin_X,
         selectionRectangeDimensions.origin_Y,
         width + selectionRectangeDimensions.widthDelta,
-        height + selectionRectangeDimensions.heightDelta
+        height + selectionRectangeDimensions.heightDelta,
       );
     });
   }
@@ -139,7 +139,7 @@ export class Output extends CircuitElement {
     this.initInputTerminal();
     this.initOutputText();
     this.genericInitFunctionality();
-    Orchestrator.actions.turnOnElementSelection(this.id);
+    Orchestrator.dispatch("turnOnElementSelection", this.id);
   }
 
   protected initInputTerminal() {
@@ -179,14 +179,14 @@ export class Output extends CircuitElement {
     if (simulatorClickMode === "selecting") {
       this.genericOnPointerUpFunctionality();
       const connectionPoints = inputConnectionPoints.adaptParticle(
-        this.id
-      )[0]();
+        this.id,
+      )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {
         const connectionPoint = connectionPoints[i];
         const conductorConnectionPointIdOrFalse =
           checkForCollisionWithConductorConnectionPoint(connectionPoint);
         if (conductorConnectionPointIdOrFalse) {
-          Orchestrator.actions.addNodeInput({
+          Orchestrator.dispatch("addNodeInput", {
             elementId: this.id,
             nodeInput: conductorConnectionPointIdOrFalse,
           });

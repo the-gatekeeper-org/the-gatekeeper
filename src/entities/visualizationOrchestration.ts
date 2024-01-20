@@ -25,31 +25,31 @@ export const gateOrchestration = {
     gate,
     gateType,
   }: Pick<GateOptions, "gateType" | "id"> & { gate: Gate }) {
-    elementTypes.adaptParticle(id, gateType);
-    elementSelections.adaptParticle(id, false);
+    elementTypes.createParticle(id, gateType);
+    elementSelections.createParticle(id, false);
     // TODO: make it possible to use `null` or `undefined` initial values for `adaptParticle` and co.
     // TODO: add method for tracking all particles in a `ParticleEntity` using effects and possibly memos
-    inputConnectionPoints.adaptParticle(id, []);
-    outputConnectionPoints.adaptParticle(id, []);
-    elementInstances.adaptParticle(id, gate);
-    Orchestrator.actions.addGateSimulationEntities({ gateType, id });
+    inputConnectionPoints.createParticle(id, []);
+    outputConnectionPoints.createParticle(id, []);
+    elementInstances.createParticle(id, gate);
+    Orchestrator.dispatch("addGateSimulationEntities", { gateType, id });
   },
   prepareToAddGate(
     options: Omit<
       Parameters<typeof visualizationEngine.prepareToAddGate>[0],
       "id"
-    >
+    >,
   ) {
     const id = generateCircuitElementId();
     visualizationEngine.prepareToAddGate({ ...options, id });
   },
   removeGate(id: CircuitElementId) {
-    Orchestrator.actions.turnOffElementSelection(id);
+    Orchestrator.dispatch("turnOffElementSelection", id);
     elementTypes.deleteParticles([id]);
     elementSelections.deleteParticles([id]);
     inputConnectionPoints.deleteParticles([id]);
     outputConnectionPoints.deleteParticles([id]);
-    const elementInstance = elementInstances.adaptParticle(id)[0]() as Gate;
+    const elementInstance = elementInstances.adaptParticle(id)![0]() as Gate;
     elementInstance.detonate();
     elementInstances.deleteParticles([id]);
     $nodeInputs.deleteParticles([id]);
@@ -70,18 +70,20 @@ export const conductorOrchestration = {
       if (conductorId === undefined) {
         conductorId = generateCircuitElementId();
       }
-      elementTypes.adaptParticle(conductorId!, "conductor");
-      conductorConnectionPoints.adaptParticle(
+      elementTypes.createParticle(conductorId!, "conductor");
+      conductorConnectionPoints.createParticle(
         conductorId!,
-        globalConnectionPoints
+        globalConnectionPoints,
       );
       const conductor = visualizationEngine.addConductor({
         x: globalConnectionPoints[0].x,
         y: globalConnectionPoints[0].y,
         id: conductorId!,
       });
-      elementInstances.adaptParticle(conductorId!, conductor);
-      Orchestrator.actions.addConductorSimulationEntities(conductorId!);
+      elementInstances.createParticle(conductorId!, conductor);
+      outputConnectionPoints.createParticle(conductorId, []);
+      elementSelections.createParticle(conductorId, true);
+      Orchestrator.dispatch("addConductorSimulationEntities", conductorId!);
 
       return conductorId;
     }
@@ -108,13 +110,13 @@ export const conductorOrchestration = {
     setIsBeingDrawn(isBeingDrawn);
   },
   removeConductor(id: CircuitElementId) {
-    Orchestrator.actions.turnOffElementSelection(id);
+    Orchestrator.dispatch("turnOffElementSelection", id);
     elementTypes.deleteParticles([id]);
     elementSelections.deleteParticles([id]);
     conductorConnectionPoints.deleteParticles([id]);
     const elementInstance = elementInstances.adaptParticle(
-      id
-    )[0]() as Conductor;
+      id,
+    )![0]() as Conductor;
     elementInstance.detonate();
     elementInstances.deleteParticles([id]);
     $nodeInputs.deleteParticles([id]);
@@ -124,23 +126,23 @@ export const conductorOrchestration = {
 
 export const inputOrchestration = {
   addInput({ id, input }: Pick<InputOptions, "id"> & { input: Input }) {
-    elementTypes.adaptParticle(id, "input");
-    elementSelections.adaptParticle(id, false);
-    outputConnectionPoints.adaptParticle(id, []);
-    elementInstances.adaptParticle(id, input);
-    Orchestrator.actions.addInputSimulationEntities(id);
+    elementTypes.createParticle(id, "input");
+    elementSelections.createParticle(id, false);
+    outputConnectionPoints.createParticle(id, []);
+    elementInstances.createParticle(id, input);
+    Orchestrator.dispatch("addInputSimulationEntities", id);
   },
   prepareToAddInput() {
     const id = generateCircuitElementId();
     visualizationEngine.prepareToAddInput({ id });
   },
   removeInput(id: CircuitElementId) {
-    Orchestrator.actions.turnOffElementSelection(id);
+    Orchestrator.dispatch("turnOffElementSelection", id);
     elementTypes.deleteParticles([id]);
     elementSelections.deleteParticles([id]);
     inputConnectionPoints.deleteParticles([id]);
     outputConnectionPoints.deleteParticles([id]);
-    const elementInstance = elementInstances.adaptParticle(id)[0]() as Gate;
+    const elementInstance = elementInstances.adaptParticle(id)![0]() as Gate;
     elementInstance.detonate();
     elementInstances.deleteParticles([id]);
     $nodeInputs.deleteParticles([id]);
@@ -150,23 +152,23 @@ export const inputOrchestration = {
 
 export const outputOrchestration = {
   addOutput({ id, output }: Pick<OutputOptions, "id"> & { output: Output }) {
-    elementTypes.adaptParticle(id, "output");
-    elementSelections.adaptParticle(id, false);
-    inputConnectionPoints.adaptParticle(id, []);
-    elementInstances.adaptParticle(id, output);
-    Orchestrator.actions.addOutputSimulationEntities(id);
+    elementTypes.createParticle(id, "output");
+    elementSelections.createParticle(id, false);
+    inputConnectionPoints.createParticle(id, []);
+    elementInstances.createParticle(id, output);
+    Orchestrator.dispatch("addOutputSimulationEntities", id);
   },
   prepareToAddOutput() {
     const id = generateCircuitElementId();
     visualizationEngine.prepareToAddOutput({ id });
   },
   removeOutput(id: CircuitElementId) {
-    Orchestrator.actions.turnOffElementSelection(id);
+    Orchestrator.dispatch("turnOffElementSelection", id);
     elementTypes.deleteParticles([id]);
     elementSelections.deleteParticles([id]);
     inputConnectionPoints.deleteParticles([id]);
     outputConnectionPoints.deleteParticles([id]);
-    const elementInstance = elementInstances.adaptParticle(id)[0]() as Gate;
+    const elementInstance = elementInstances.adaptParticle(id)![0]() as Gate;
     elementInstance.detonate();
     elementInstances.deleteParticles([id]);
     $nodeInputs.deleteParticles([id]);
@@ -179,25 +181,25 @@ export const elementOrchestration = {
     id: Exclude<
       Parameters<typeof elementSelections.adaptParticle>[0],
       "selectedElements"
-    >
+    >,
   ) {
-    const isSelected = elementSelections.adaptParticle(id)[0];
+    const isSelected = elementSelections.adaptParticle(id)![0];
     isSelected()
-      ? Orchestrator.actions.turnOffElementSelection(id)
-      : Orchestrator.actions.turnOnElementSelection(id);
+      ? Orchestrator.dispatch("turnOffElementSelection", id)
+      : Orchestrator.dispatch("turnOnElementSelection", id);
   },
   turnOffAllElementSelections(
     exception?: Exclude<
       Parameters<typeof elementSelections.adaptParticle>[0],
       "selectedElements"
-    >
+    >,
   ) {
     const [selectedElements, setSelectedElements] =
       elementSelections.adaptParticle("selectedElements");
     selectedElements().forEach(
       (selectedElement) =>
         selectedElement !== exception &&
-        elementSelections.adaptParticle(selectedElement)[1](false)
+        elementSelections.adaptParticle(selectedElement)![1](false),
     );
     exception ? setSelectedElements([exception]) : setSelectedElements([]);
   },
@@ -205,7 +207,7 @@ export const elementOrchestration = {
     id: Exclude<
       Parameters<typeof elementSelections.adaptParticle>[0],
       "selectedElements"
-    >
+    >,
   ) {
     // TODO: find a better way to achieve this
     // use `setTimeout` to ensure parity with `turnOnElementSelection`
@@ -213,16 +215,16 @@ export const elementOrchestration = {
       const [_, setSelectedElements] =
         elementSelections.adaptParticle("selectedElements");
       setSelectedElements((selectedElements) =>
-        selectedElements.filter((elementId) => elementId !== id)
+        selectedElements.filter((elementId) => elementId !== id),
       );
-      elementSelections.adaptParticle(id)[1](false);
+      elementSelections.adaptParticle(id)![1](false);
     });
   },
   turnOnElementSelection(
     id: Exclude<
       Parameters<typeof elementSelections.adaptParticle>[0],
       "selectedElements"
-    >
+    >,
   ) {
     // TODO: find a better way to achieve this
     // use `setTimeout` to ensure that `elementSelection` is only turned on after any possible `turnOffAllElementSelections` operations
@@ -230,7 +232,7 @@ export const elementOrchestration = {
       const setSelectedElements =
         elementSelections.adaptParticle("selectedElements")[1];
       setSelectedElements((selectedElements) => [...selectedElements, id]);
-      elementSelections.adaptParticle(id)[1](true);
+      elementSelections.adaptParticle(id)![1](true);
     });
   },
 };
@@ -244,7 +246,7 @@ export const connectionPointOrchestration = {
     connectionPoint: IPointData;
   }) {
     // TODO: update types in promethium to return `something | undefined` for generic particle ids
-    inputConnectionPoints.adaptParticle(id)[1]((connectionPoints) => [
+    inputConnectionPoints.adaptParticle(id)![1]((connectionPoints) => [
       ...connectionPoints,
       connectionPoint,
     ]);
@@ -257,7 +259,7 @@ export const connectionPointOrchestration = {
     connectionPoint: IPointData;
   }) {
     // TODO: update types in promethium to return `something | undefined` for generic particle ids
-    outputConnectionPoints.adaptParticle(id)[1]((connectionPoints) => [
+    outputConnectionPoints.adaptParticle(id)![1]((connectionPoints) => [
       ...connectionPoints,
       connectionPoint,
     ]);
@@ -269,21 +271,21 @@ export const connectionPointOrchestration = {
     id: Parameters<typeof outputConnectionPoints.adaptParticle>[0];
     connectionPoints: [IPointData, IPointData];
   }) {
-    conductorConnectionPoints.adaptParticle(id)[1](connectionPoints);
+    conductorConnectionPoints.adaptParticle(id)![1](connectionPoints);
   },
   clearInputConnectionPoints({
     id,
   }: {
     id: Parameters<typeof inputConnectionPoints.adaptParticle>[0];
   }) {
-    inputConnectionPoints.adaptParticle(id)[1]([]);
+    inputConnectionPoints.adaptParticle(id)![1]([]);
   },
   clearOutputConnectionPoints({
     id,
   }: {
     id: Parameters<typeof outputConnectionPoints.adaptParticle>[0];
   }) {
-    outputConnectionPoints.adaptParticle(id)[1]([]);
+    outputConnectionPoints.adaptParticle(id)![1]([]);
   },
 };
 
@@ -297,7 +299,7 @@ export const positionOrchestration = {
     x: number;
     y: number;
   }) {
-    const setPosition = elementPositions.adaptParticle(id)[1];
+    const setPosition = elementPositions.adaptParticle(id)![1];
     setPosition({ x: round(x), y: round(y) });
   },
 };

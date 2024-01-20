@@ -6,12 +6,12 @@ import { simulationEngine } from "./Orchestrator";
 
 export const simulationOrchestration = {
   addConductorSimulationEntities(id: CircuitElementId) {
-    $nodeInputs.adaptParticle(id, []);
-    $nodeOutputs.adaptDerivative(
+    $nodeInputs.createParticle(id, []);
+    $nodeOutputs.createDerivative(
       id,
       adaptMemo(() => {
         return simulationEngine.evaluate_Conductor(id);
-      })
+      }),
     );
   },
   addNodeInput({
@@ -23,7 +23,7 @@ export const simulationOrchestration = {
     nodeInput: CircuitElementId;
     position?: number;
   }) {
-    const setNodeInputs = $nodeInputs.adaptParticle(elementId)[1];
+    const setNodeInputs = $nodeInputs.adaptParticle(elementId)![1];
     setNodeInputs((nodeInputs) => {
       if (position !== undefined) {
         nodeInputs[position] = nodeInput;
@@ -41,33 +41,33 @@ export const simulationOrchestration = {
     gateType: GateType;
     id: CircuitElementId;
   }) {
-    $nodeInputs.adaptParticle(id, []);
-    $nodeOutputs.adaptDerivative(
+    $nodeInputs.createParticle(id, []);
+    $nodeOutputs.createDerivative(
       id,
       adaptMemo(() => {
         return simulationEngine.evaluate_Gate(gateType, id);
-      })
+      }),
     );
   },
   addInputSimulationEntities(id: CircuitElementId) {
-    $nodeInputs.adaptParticle(id, [0]);
-    $nodeOutputs.adaptDerivative(
+    $nodeInputs.createParticle(id, [0]);
+    $nodeOutputs.createDerivative(
       id,
       adaptMemo(() => {
         return simulationEngine.evaluate_Input(id);
-      })
+      }),
     );
   },
   addOutputSimulationEntities(id: CircuitElementId) {
-    $nodeInputs.adaptParticle(id, []);
-    $nodeOutputs.adaptDerivative(
+    $nodeInputs.createParticle(id, []);
+    $nodeOutputs.createDerivative(
       id,
       adaptMemo(() => {
         return simulationEngine.evaluate_Output();
-      })
+      }),
     );
   },
   toggleInputValue(id: CircuitElementId) {
-    $nodeInputs.adaptParticle(id)[1](([value]) => (value === 0 ? [1] : [0]));
+    $nodeInputs.adaptParticle(id)![1](([value]) => (value === 0 ? [1] : [0]));
   },
 };
