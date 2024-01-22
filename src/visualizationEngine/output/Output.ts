@@ -24,6 +24,7 @@ import { NodeBitValue } from "@/entities/simulationEntities";
 import { ipc } from "@/App";
 
 export type OutputOptions = CircuitElementOptions;
+
 export class Output extends CircuitElement {
   outputBody = new Graphics();
   inputTerminal = new Graphics();
