@@ -1,5 +1,5 @@
-const defaultTheme = require("tailwindcss/defaultTheme");
-import { bg, text, border } from "./src/colors.ts";
+import defaultTheme from "tailwindcss/defaultTheme";
+import { bg, text, border } from "./src/ui/colors.ts";
 
 /** @type {import('tailwindcss').Config} */
 export default {

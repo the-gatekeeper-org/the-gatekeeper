@@ -1,12 +1,12 @@
 import { CircuitElementId } from "@/entities/utils";
 import { Container, Graphics } from "pixi.js";
 import { adaptEffect, adaptState, unify } from "promethium-js";
-import { VisualizationEngine } from "./VisualizationEngine";
+import { VisualizationEngine } from "@/engines/visualizationEngine/VisualizationEngine";
 import {
   elementPositions,
   elementSelections,
 } from "@/entities/visualizationEntities";
-import { bg, border } from "@/colors";
+import { bg, border } from "@/ui/colors";
 import Orchestrator from "@/entities/Orchestrator";
 
 export type CircuitElementOptions = {

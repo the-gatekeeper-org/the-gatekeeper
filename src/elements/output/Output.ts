@@ -1,97 +1,102 @@
-import { $nodeOutputs, NodeBitValue } from "@/entities/simulationEntities";
 import { Graphics, Text } from "pixi.js";
 import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
-import {
-  inputBodyDimensions,
-  outputTerminalDimensions,
-  selectionRectangeDimensions,
-} from "./dimensions";
-import { stroke } from "@/colors";
 import { adaptEffect } from "promethium-js";
 import {
-  addOutputConnectionPoint,
+  inputTerminalDimensions,
+  outputBodyDimensions,
+  selectionRectangeDimensions,
+} from "./dimensions";
+import { stroke } from "@/ui/colors";
+import {
+  addInputConnectionPoint,
   adjustOpacityOnInteract,
   checkForCollisionWithConductorConnectionPoint,
-  outputConnectionPointIsBeingHoveredOver,
-  round,
+  inputConnectionPointIsBeingHoveredOver,
 } from "../utils";
-import Orchestrator from "@/entities/Orchestrator";
+import { round } from "@/engines/visualizationEngine/utils";
+import Orchestrator, { simulationEngine } from "@/entities/Orchestrator";
 import {
   elementPositions,
-  outputConnectionPoints,
+  inputConnectionPoints,
 } from "@/entities/visualizationEntities";
 import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
-import { ipc } from "@/App";
+import { NodeBitValue } from "@/entities/simulationEntities";
 
-export type InputOptions = CircuitElementOptions;
-export class Input extends CircuitElement {
-  inputBody = new Graphics();
-  outputTerminal = new Graphics();
-  outputText = new Text("0", {
+export type OutputOptions = CircuitElementOptions;
+
+export class Output extends CircuitElement {
+  outputBody = new Graphics();
+  inputTerminal = new Graphics();
+  outputText = new Text("X", {
     fontFamily: "Arial",
-    fontSize: 15,
+    fontSize: 12,
     fill: 0xffffff,
     align: "center",
   });
 
-  constructor(options: CircuitElementOptions) {
+  constructor(options: OutputOptions) {
     const { visualizationEngine, x, y, id } = options;
     super({ visualizationEngine, x, y, id });
   }
 
-  protected addOutputConnectionPoint() {
+  protected addInputConnectionPoint() {
     const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
-      addOutputConnectionPoint(this, {
-        x: outputTerminalDimensions.center_X,
-        y: outputTerminalDimensions.center_Y,
+      Orchestrator.dispatch("clearInputConnectionPoints", { id: this.id });
+      addInputConnectionPoint(this, {
+        x: inputTerminalDimensions.center_X,
+        y: inputTerminalDimensions.center_Y,
       });
     }, [position]);
   }
 
-  protected buildInputBody() {
+  protected buildInputTerminal() {
     adaptEffect(() => {
-      this.inputBody.clear();
-      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)!();
-      if (nodeOutput === 0) {
-        this.inputBody.beginFill("#FFA500", 1);
-      } else {
-        this.inputBody.beginFill("#008000", 1);
-      }
-      this.inputBody.lineStyle({
-        width: inputBodyDimensions.strokeWidth,
-        color: stroke["primary-dark"],
-      });
-      this.inputBody.drawRect(
-        inputBodyDimensions.origin_X,
-        inputBodyDimensions.origin_Y,
-        inputBodyDimensions.width,
-        inputBodyDimensions.height,
+      this.inputTerminal.clear();
+      this.inputTerminal.beginFill(stroke["primary-dark"]);
+      this.inputTerminal.drawCircle(
+        inputTerminalDimensions.center_X,
+        inputTerminalDimensions.center_Y,
+        inputTerminalDimensions.terminalRadius,
       );
-      adjustOpacityOnInteract(this, this.inputBody);
+      adjustOpacityOnInteract(this, this.inputTerminal);
     });
   }
 
-  protected buildOutputTerminal() {
+  protected buildOutputBody() {
     adaptEffect(() => {
-      this.outputTerminal.clear();
-      this.outputTerminal.beginFill(stroke["primary-dark"]);
-      this.outputTerminal.drawCircle(
-        outputTerminalDimensions.center_X,
-        outputTerminalDimensions.center_Y,
-        outputTerminalDimensions.terminalRadius,
+      this.outputBody.clear();
+      const nodeOutput = simulationEngine.getActualOutput_Output(this.id);
+      if (nodeOutput === 0) {
+        this.outputBody.beginFill("#FFA500", 1);
+      } else if (nodeOutput === 1) {
+        this.outputBody.beginFill("#008000", 1);
+      } else {
+        this.outputBody.beginFill("#0000FF", 1);
+      }
+      this.outputBody.lineStyle({
+        width: outputBodyDimensions.strokeWidth,
+        color: stroke["primary-dark"],
+      });
+      this.outputBody.drawCircle(
+        outputBodyDimensions.center_X,
+        outputBodyDimensions.center_Y,
+        outputBodyDimensions.radius,
       );
-      adjustOpacityOnInteract(this, this.outputTerminal);
+      adjustOpacityOnInteract(this, this.outputBody);
     });
   }
 
   protected buildOutputText() {
     adaptEffect(() => {
-      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)!();
-      this.outputText.text = (nodeOutput as NodeBitValue).toString();
-      this.outputText.x = 3;
-      this.outputText.y = 2;
+      const nodeOutput = simulationEngine.getActualOutput_Output(this.id);
+      if (nodeOutput === undefined || nodeOutput === "floating") {
+        this.outputText.text = "X";
+      } else {
+        this.outputText.text = (nodeOutput as NodeBitValue).toString();
+      }
+      this.outputText.x = 8;
+      this.outputText.y = 3;
     });
   }
 
@@ -111,7 +116,7 @@ export class Input extends CircuitElement {
   }
 
   protected conditionallyDrawConnectionPointCircle(e: PointerEvent) {
-    if (outputConnectionPointIsBeingHoveredOver(this, { x: e.x, y: e.y })) {
+    if (inputConnectionPointIsBeingHoveredOver(this, { x: e.x, y: e.y })) {
       this.visualizationEngine.connectionPointIsBeingHoveredOver(true);
       this.visualizationEngine.connectionPointSelectionCirclePosition({
         x: round(e.x),
@@ -123,28 +128,28 @@ export class Input extends CircuitElement {
   }
 
   detonate() {
-    this.inputBody.destroy();
-    this.outputTerminal.destroy();
+    this.outputBody.destroy();
+    this.inputTerminal.destroy();
     this.genericDetonateFunctionality();
   }
 
   init() {
-    this.initInputBody();
-    this.addOutputConnectionPoint();
-    this.initOutputTerminal();
+    this.initOutputBody();
+    this.addInputConnectionPoint();
+    this.initInputTerminal();
     this.initOutputText();
     this.genericInitFunctionality();
     Orchestrator.dispatch("turnOnElementSelection", this.id);
   }
 
-  protected initInputBody() {
-    this.buildInputBody();
-    this.addChild(this.inputBody);
+  protected initInputTerminal() {
+    this.buildInputTerminal();
+    this.addChild(this.inputTerminal);
   }
 
-  protected initOutputTerminal() {
-    this.buildOutputTerminal();
-    this.addChild(this.outputTerminal);
+  protected initOutputBody() {
+    this.buildOutputBody();
+    this.addChild(this.outputBody);
   }
 
   protected initOutputText() {
@@ -157,9 +162,6 @@ export class Input extends CircuitElement {
       $generalSimulatorState.adaptParticle("clickMode")[0]();
     if (simulatorClickMode === "selecting") {
       this.genericOnPointerDownFunctionality();
-    } else if (simulatorClickMode === "simulating") {
-      Orchestrator.dispatch("toggleInputValue", this.id);
-      ipc.emit("action", { action: "toggleInputValue", options: this.id });
     }
   };
 
@@ -176,7 +178,7 @@ export class Input extends CircuitElement {
       $generalSimulatorState.adaptParticle("clickMode")[0]();
     if (simulatorClickMode === "selecting") {
       this.genericOnPointerUpFunctionality();
-      const connectionPoints = outputConnectionPoints.adaptParticle(
+      const connectionPoints = inputConnectionPoints.adaptParticle(
         this.id,
       )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {
@@ -185,15 +187,8 @@ export class Input extends CircuitElement {
           checkForCollisionWithConductorConnectionPoint(connectionPoint);
         if (conductorConnectionPointIdOrFalse) {
           Orchestrator.dispatch("addNodeInput", {
-            elementId: conductorConnectionPointIdOrFalse,
-            nodeInput: this.id,
-          });
-          ipc.emit("action", {
-            action: "addNodeInput",
-            options: {
-              elementId: conductorConnectionPointIdOrFalse,
-              nodeInput: this.id,
-            },
+            elementId: this.id,
+            nodeInput: conductorConnectionPointIdOrFalse,
           });
         }
       }

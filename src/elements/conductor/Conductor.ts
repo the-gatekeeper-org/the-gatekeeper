@@ -8,7 +8,7 @@ import {
   conductorBodyDimensions,
   selectionRectangeDimensions,
 } from "./dimensions";
-import { stroke } from "@/colors";
+import { stroke } from "@/ui/colors";
 import { adaptEffect } from "promethium-js";
 import {
   directionHasRestarted,
@@ -22,8 +22,8 @@ import { ca } from "@/utils";
 import {
   adjustOpacityOnInteract,
   conductorConnectionPointIsBeingHoveredOver,
-  round,
 } from "../utils";
+import { round } from "@/engines/visualizationEngine/utils";
 import Orchestrator from "@/entities/Orchestrator";
 import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
 

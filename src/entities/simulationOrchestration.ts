@@ -1,4 +1,4 @@
-import { GateType } from "@/visualizationEngine/gate/Gate";
+import { GateType } from "@/elements/gate/Gate";
 import { CircuitElementId } from "./utils";
 import { $nodeInputs, $nodeOutputs } from "./simulationEntities";
 import { adaptMemo } from "promethium-js";

@@ -4,7 +4,7 @@ import {
   NodeBitValue,
 } from "@/entities/simulationEntities";
 import { CircuitElementId } from "@/entities/utils";
-import { GateType } from "@/visualizationEngine/gate/Gate";
+import { GateType } from "@/elements/gate/Gate";
 
 const and = (a: NodeBitValue, b: NodeBitValue) => a && b;
 const or = (a: NodeBitValue, b: NodeBitValue) => a || b;

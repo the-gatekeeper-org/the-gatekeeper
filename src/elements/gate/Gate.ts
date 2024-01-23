@@ -1,5 +1,5 @@
 import { Graphics } from "pixi.js";
-import { stroke } from "@/colors";
+import { stroke } from "@/ui/colors";
 import { UnifiedState, adaptEffect, adaptState, unify } from "promethium-js";
 import buildGateBody from "./buildGateBody";
 import {
@@ -15,8 +15,8 @@ import {
   checkForCollisionWithConductorConnectionPoint,
   inputConnectionPointIsBeingHoveredOver,
   outputConnectionPointIsBeingHoveredOver,
-  round,
 } from "../utils";
+import { round } from "@/engines/visualizationEngine/utils";
 import { elementTypes } from "@/entities/sharedEntities";
 import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
 import Orchestrator from "@/entities/Orchestrator";
@@ -26,7 +26,6 @@ import {
   outputConnectionPoints,
 } from "@/entities/visualizationEntities";
 import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
-import { ipc } from "@/App";
 
 export type GateType = "and" | "or" | "not" | "nand" | "nor" | "xor" | "xnor";
 
@@ -95,8 +94,6 @@ export class Gate extends CircuitElement {
   protected addOutputConnectionPoint() {
     const position = elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      console.log("here in effect!");
-
       Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
       const localConnectionPoint = this.getOutputTerminalLocalConnectionPoint();
       addOutputConnectionPoint(this, localConnectionPoint);
@@ -246,8 +243,6 @@ export class Gate extends CircuitElement {
   };
 
   protected onPointerUp = () => {
-    console.log("Here, gate!");
-
     const simulatorClickMode =
       $generalSimulatorState.adaptParticle("clickMode")[0]();
     if (simulatorClickMode === "selecting") {
@@ -268,14 +263,6 @@ export class Gate extends CircuitElement {
               nodeInput: conductorConnectionPointIdOrFalse,
               position: i,
             });
-            ipc.emit("action", {
-              action: "addNodeInput",
-              options: {
-                elementId: this.id,
-                nodeInput: conductorConnectionPointIdOrFalse,
-                position: i,
-              },
-            });
           }
         }
       });
@@ -290,13 +277,6 @@ export class Gate extends CircuitElement {
           Orchestrator.dispatch("addNodeInput", {
             elementId: conductorConnectionPointIdOrFalse,
             nodeInput: this.id,
-          });
-          ipc.emit("action", {
-            action: "addNodeInput",
-            options: {
-              elementId: conductorConnectionPointIdOrFalse,
-              nodeInput: this.id,
-            },
           });
         }
       });

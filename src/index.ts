@@ -1,5 +1,5 @@
 import { h, renderTemplateFn } from "promethium-js";
-import App from "./App";
+import App from "@/ui/App";
 import "./index.css";
 import { html } from "lit";
 

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"the-gatekeeper-org/the-gatekeeper/server"
+
 	"github.com/promethiumjs/photon-lib-go/photon"
 )
 
 func main() {
-	photon.Initialize(content, "dist", start, fileServerPort, ipcPort)
+	photon.Initialize(content, "dist", server.Start, fileServerPort, ipcPort)
 	go launchBrowserUI()
 	photon.IPCInit(ipcPort)
 }

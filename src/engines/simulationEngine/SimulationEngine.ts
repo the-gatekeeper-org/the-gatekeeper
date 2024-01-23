@@ -1,14 +1,10 @@
 import { NodeBitValue } from "@/entities/simulationEntities";
 import { $nodeInputs, $nodeOutputs } from "@/entities/simulationEntities";
 import { CircuitElementId } from "@/entities/utils";
-import { GateType } from "@/visualizationEngine/gate/Gate";
+import { GateType } from "@/elements/gate/Gate";
 import evaluate_Gate from "./evaluate_Gate";
 
 export default class SimulationEngine {
-  simulationContext = [];
-
-  constructor() {}
-
   getActualOutput_Output(id: CircuitElementId) {
     const nodeInputs = $nodeInputs.adaptParticle(id)![0]();
     const nodeInput = nodeInputs[0];

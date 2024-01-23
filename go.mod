@@ -1,4 +1,4 @@
-module project-fourth/logically
+module the-gatekeeper-org/the-gatekeeper
 
 go 1.20
 

@@ -1,7 +1,7 @@
 import { $nodeOutputs } from "@/entities/simulationEntities";
 import Orchestrator, { visualizationEngine } from "./Orchestrator";
 import { CircuitElementId, generateCircuitElementId } from "./utils";
-import { Gate, GateOptions } from "@/visualizationEngine/gate/Gate";
+import { Gate, GateOptions } from "@/elements/gate/Gate";
 import {
   conductorConnectionPoints,
   conductorPreviewData,
@@ -12,12 +12,12 @@ import {
 } from "./visualizationEntities";
 import { elementTypes, elementInstances } from "./sharedEntities";
 import { IPointData } from "pixi.js";
-import { conductorSizeIsValid } from "@/visualizationEngine/conductor/utils";
-import { Input, InputOptions } from "@/visualizationEngine/input/Input";
-import { Output, OutputOptions } from "@/visualizationEngine/output/Output";
-import { Conductor } from "@/visualizationEngine/conductor/Conductor";
+import { conductorSizeIsValid } from "@/elements/conductor/utils";
+import { Input, InputOptions } from "@/elements/input/Input";
+import { Output, OutputOptions } from "@/elements/output/Output";
+import { Conductor } from "@/elements/conductor/Conductor";
 import { $nodeInputs } from "./simulationEntities";
-import { round } from "@/visualizationEngine/utils";
+import { round } from "@/engines/visualizationEngine/utils";
 
 export const gateOrchestration = {
   addGate({

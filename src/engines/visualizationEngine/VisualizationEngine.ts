@@ -1,26 +1,25 @@
 import { Container, Graphics, IPointData, Renderer, Ticker } from "pixi.js";
-import { Gate, GateOptions } from "./gate/Gate";
-import { bg, border } from "@/colors";
-import { Grid, GridOptions } from "./grid/Grid";
+import { Gate, GateOptions } from "@/elements/gate/Gate";
+import { bg, border } from "@/ui/colors";
+import { Grid, GridOptions } from "@/elements/grid/Grid";
 import Orchestrator from "@/entities/Orchestrator";
 import { adaptEffect, adaptState, unify } from "promethium-js";
 import {
   connectionPointSelectionCircleDimensions,
   gridGap,
 } from "./dimensions";
-import { Conductor, ConductorOptions } from "./conductor/Conductor";
+import { Conductor, ConductorOptions } from "@/elements/conductor/Conductor";
 import { round } from "./utils";
 import {
   ConductorConnectionPoints,
   conductorPreviewData,
   elementSelections,
 } from "@/entities/visualizationEntities";
-import { CircuitElement } from "./CircuitElement";
-import { Input, InputOptions } from "./input/Input";
-import { Output, OutputOptions } from "./output/Output";
+import { CircuitElement } from "@/elements/CircuitElement";
+import { Input, InputOptions } from "@/elements/input/Input";
+import { Output, OutputOptions } from "@/elements/output/Output";
 import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
 import { elementTypes } from "@/entities/sharedEntities";
-import { ipc } from "@/App";
 
 interface GlobalThis {
   __PIXI_STAGE__: Container;
@@ -61,7 +60,6 @@ export class VisualizationEngine {
     const gate = new Gate({ visualizationEngine: this, ...options });
     const { id, gateType } = options;
     Orchestrator.dispatch("addGate", { id, gate, gateType });
-    ipc.emit("action", { action: "addGate", options });
     gate.init();
     this.stage.addChild(gate);
 
@@ -72,7 +70,6 @@ export class VisualizationEngine {
     const input = new Input({ visualizationEngine: this, ...options });
     const { id } = options;
     Orchestrator.dispatch("addInput", { id, input });
-    ipc.emit("action", { action: "addInput", options });
     input.init();
     this.stage.addChild(input);
 
@@ -83,7 +80,6 @@ export class VisualizationEngine {
     const output = new Output({ visualizationEngine: this, ...options });
     const { id } = options;
     Orchestrator.dispatch("addOutput", { id, output });
-    ipc.emit("action", { action: "addOutput", options });
     output.init();
     this.stage.addChild(output);
 
@@ -228,25 +224,11 @@ export class VisualizationEngine {
         sharedConnectionPoints,
         { x: coordinates.current!.x, y: coordinates.current!.y },
       ] as ConductorConnectionPoints;
-      const conductorId_1 = Orchestrator.dispatch("addConductor", {
+      Orchestrator.dispatch("addConductor", {
         globalConnectionPoints: globalConnectionPoints_1,
       });
-      ipc.emit("action", {
-        action: "addConductor",
-        options: {
-          globalConnectionPoints: globalConnectionPoints_1,
-          id: conductorId_1,
-        },
-      });
-      const conductorId_2 = Orchestrator.dispatch("addConductor", {
+      Orchestrator.dispatch("addConductor", {
         globalConnectionPoints: globalConnectionPoints_2,
-      });
-      ipc.emit("action", {
-        action: "addConductor",
-        options: {
-          globalConnectionPoints: globalConnectionPoints_2,
-          id: conductorId_2,
-        },
       });
     }
   }
@@ -314,28 +296,12 @@ export class VisualizationEngine {
           const elementType = elementTypes.adaptParticle(selectedElement)![0]();
           if (elementType === "conductor") {
             Orchestrator.dispatch("removeConductor", selectedElement);
-            ipc.emit("action", {
-              action: "removeConductor",
-              options: selectedElement,
-            });
           } else if (elementType === "input") {
             Orchestrator.dispatch("removeInput", selectedElement);
-            ipc.emit("action", {
-              action: "removeInput",
-              options: selectedElement,
-            });
           } else if (elementType === "output") {
             Orchestrator.dispatch("removeOutput", selectedElement);
-            ipc.emit("action", {
-              action: "removeOutput",
-              options: selectedElement,
-            });
           } else {
             Orchestrator.dispatch("removeGate", selectedElement);
-            ipc.emit("action", {
-              action: "removeGate",
-              options: selectedElement,
-            });
           }
         });
       }
@@ -367,14 +333,6 @@ export class VisualizationEngine {
         x: newDragTarget_x,
         y: newDragTarget_y,
       });
-      ipc.emit("action", {
-        action: "changeElementPosition",
-        options: {
-          id: this.dragTarget.id,
-          x: newDragTarget_x,
-          y: newDragTarget_y,
-        },
-      });
     }
   }
 
@@ -398,8 +356,6 @@ export class VisualizationEngine {
   }
 
   protected onPointerUp() {
-    console.log("Here, viz engine!");
-
     this.conditionallySpawnPreviewConductors();
     Orchestrator.dispatch("updateConductorPreview", {
       previousCoordinates: null,
@@ -407,15 +363,6 @@ export class VisualizationEngine {
       startingCoordinates: null,
       isBeingDrawn: false,
     });
-    // ipc.emit("action", {
-    //   action: "updateConductorPreview",
-    //   options: {
-    //     previousCoordinates: null,
-    //     currentCoordinates: null,
-    //     startingCoordinates: null,
-    //     isBeingDrawn: false,
-    //   },
-    // });
   }
 
   protected onPointerMove(e: PointerEvent) {

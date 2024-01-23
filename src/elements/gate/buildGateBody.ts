@@ -1,6 +1,6 @@
 import { adaptEffect } from "promethium-js";
 import { Gate, GateType } from "./Gate";
-import { stroke } from "@/colors";
+import { stroke } from "@/ui/colors";
 import { gateBodyDimensions } from "./dimensions";
 import { adjustOpacityOnInteract } from "../utils";
 import { elementTypes } from "@/entities/sharedEntities";

@@ -1,4 +1,4 @@
-import { VisualizationEngine } from "@/visualizationEngine/VisualizationEngine";
+import { VisualizationEngine } from "@/engines/visualizationEngine/VisualizationEngine";
 import { ActionEntity } from "promethium-js";
 import {
   conductorOrchestration,
@@ -10,7 +10,7 @@ import {
   positionOrchestration,
 } from "./visualizationOrchestration";
 import { buttonOrchestration } from "./userInterfaceOrchestration";
-import SimulationEngine from "@/simulationEngine/SimulationEngine";
+import SimulationEngine from "@/engines/simulationEngine/SimulationEngine";
 import { simulationOrchestration } from "./simulationOrchestration";
 import { generalAppStateOrchestration } from "./generalAppStateOrchestration";
 

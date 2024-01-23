@@ -1,12 +1,12 @@
 import { ParticleEntity } from "promethium-js";
 import { CircuitElementId } from "./utils";
-import { GateType } from "@/visualizationEngine/gate/Gate";
-import { CircuitElement } from "@/visualizationEngine/CircuitElement";
+import { GateType } from "@/elements/gate/Gate";
+import { CircuitElement } from "@/elements/CircuitElement";
 
-type ElementTypes = GateType | "conductor" | "input" | "output" | "blackBox";
+type ElementType = GateType | "conductor" | "input" | "output" | "blackBox";
 
 export const elementTypes = new ParticleEntity<
-  Record<CircuitElementId, ElementTypes>
+  Record<CircuitElementId, ElementType>
 >({});
 
 export const elementInstances = new ParticleEntity<

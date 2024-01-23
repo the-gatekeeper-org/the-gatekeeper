@@ -1,6 +1,5 @@
 import { Graphics, IPointData } from "pixi.js";
 import { CircuitElement } from "./CircuitElement";
-import { gridGap } from "./dimensions";
 import Orchestrator from "@/entities/Orchestrator";
 import {
   ConnectionPoints,
@@ -10,10 +9,7 @@ import {
 } from "@/entities/visualizationEntities";
 import { Conductor } from "./conductor/Conductor";
 import { CircuitElementId } from "@/entities/utils";
-
-export function round(dimension: number) {
-  return Math.round(dimension / gridGap) * gridGap;
-}
+import { round } from "@/engines/visualizationEngine/utils";
 
 export function adjustOpacityOnInteract(
   circuitElement: CircuitElement,
