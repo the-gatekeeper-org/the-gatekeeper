@@ -1,18 +1,16 @@
-import { CircuitElementId } from "@/entities/utils";
+import { CircuitElementId } from "@/stateEntities/utils";
 import { Container, Graphics } from "pixi.js";
 import { adaptEffect, adaptState, unify } from "promethium-js";
-import { VisualizationEngine } from "@/engines/visualizationEngine/VisualizationEngine";
+import { VisualizationEngine } from "@/engines/visualization/VisualizationEngine";
 import {
-  elementPositions,
-  elementSelections,
-} from "@/entities/visualizationEntities";
+  _elementPositions,
+  _generalElementData,
+  _generalElementDataActions,
+} from "@/stateEntities/generalElementData";
 import { bg, border } from "@/ui/colors";
-import Orchestrator from "@/entities/Orchestrator";
 
 export type CircuitElementOptions = {
   visualizationEngine: VisualizationEngine;
-  x: number;
-  y: number;
   id: CircuitElementId;
 };
 
@@ -22,16 +20,13 @@ export abstract class CircuitElement extends Container {
   isBeingDragged = unify(adaptState(false));
   selectionRectangle = new Graphics();
   visualizationEngine: VisualizationEngine;
+  cleanup: (() => void) | null = null;
 
   constructor(options: CircuitElementOptions) {
     super();
     this.visualizationEngine = options.visualizationEngine;
-    const position = elementPositions.createParticle(options.id, {
-      x: options.x,
-      y: options.y,
-    })[0];
     adaptEffect(() => {
-      this.position = position();
+      this.position = _elementPositions.adaptParticleValue(this.id)!;
     });
     this.id = options.id;
   }
@@ -52,7 +47,7 @@ export abstract class CircuitElement extends Container {
     this.visualizationEngine.dragTarget = this;
   }
 
-  protected abstract init(): void;
+  abstract init(): () => void;
 
   protected initSelectionRectangle() {
     this.buildSelectionRectangle();
@@ -66,13 +61,15 @@ export abstract class CircuitElement extends Container {
     this.addChild(this.selectionRectangle);
   }
 
-  protected abstract detonate(): void;
+  abstract detonate(): void;
 
   protected genericBuildSelectionRectangleFunctionality(strokeWidth: number) {
     this.selectionRectangle.clear();
     if (!this.isBeingDragged()) {
-      const isSelected = elementSelections.adaptParticle(this.id)![0];
-      if (isSelected()) {
+      const isSelected = _generalElementData
+        .adaptParticleValue("selectedElements")
+        .includes(this.id);
+      if (isSelected) {
         this.selectionRectangle.lineStyle({
           width: strokeWidth,
           color: border["secondary-dark"],
@@ -85,18 +82,17 @@ export abstract class CircuitElement extends Container {
   protected genericInitFunctionality() {
     this.initSelectionRectangle();
     this.cullable = true;
-    Orchestrator.dispatch("turnOffAllElementSelections", undefined);
   }
 
   protected genericDetonateFunctionality() {
     this.selectionRectangle.destroy();
     this.destroy();
+    this.cleanup?.();
   }
 
   protected genericOnPointerDownFunctionality() {
     this.dragStart();
-    Orchestrator.dispatch("turnOffAllElementSelections", this.id);
-    Orchestrator.dispatch("toggleElementSelection", this.id);
+    _generalElementDataActions.dispatch("toggleElementSelection", this.id);
   }
 
   protected genericOnPointerMoveFunctionality(e: PointerEvent) {
@@ -108,7 +104,7 @@ export abstract class CircuitElement extends Container {
     this.dragEnd();
     if (this.isBeingDragged()) {
       this.isBeingDragged(false);
-      Orchestrator.dispatch("turnOnElementSelection", this.id);
+      _generalElementDataActions.dispatch("turnOnElementSelection", this.id);
     }
   }
 

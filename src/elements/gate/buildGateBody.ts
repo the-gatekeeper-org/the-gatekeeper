@@ -3,7 +3,7 @@ import { Gate, GateType } from "./Gate";
 import { stroke } from "@/ui/colors";
 import { gateBodyDimensions } from "./dimensions";
 import { adjustOpacityOnInteract } from "../utils";
-import { elementTypes } from "@/entities/sharedEntities";
+import { _elementTypes } from "@/stateEntities/generalElementData";
 import { Graphics } from "pixi.js";
 
 const gateBodyBuilderFns = {
@@ -126,7 +126,7 @@ export default function buildGateBody(gate: Gate, part: Graphics) {
     width: gateBodyDimensions.strokeWidth,
     color: stroke["primary-dark"],
   });
-  const gateType = elementTypes.adaptParticle(gate.id)![0]();
+  const gateType = _elementTypes.adaptParticle(gate.id)![0]();
   gateBodyBuilderFns[gateType as GateType](gate);
   adaptEffect(() => adjustOpacityOnInteract(gate, part));
 }

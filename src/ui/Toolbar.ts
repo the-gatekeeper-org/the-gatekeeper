@@ -2,85 +2,63 @@ import { h } from "promethium-js";
 import { html } from "lit";
 import { map } from "lit/directives/map.js";
 import Button from "./Button";
-import Orchestrator from "@/entities/Orchestrator";
+import { _generalAppStateActions } from "@/stateEntities/generalAppState";
+import { _elementActions } from "@/elements/actions";
 
 const buttons: Parameters<typeof Button>[0][] = [
   {
     text: "S",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "selecting");
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "select");
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "select");
     },
     id: "select",
   },
   {
     text: "Q",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "simulating");
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "simulate");
-      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "simulate");
     },
     id: "simulate",
   },
   {
     text: "I",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "other");
-      Orchestrator.dispatch("prepareToAddInput", undefined);
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "input");
-      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "input");
+      _elementActions.dispatch("prepareToAddCircuitElement", { type: "input" });
     },
     id: "input",
   },
   {
     text: "Y",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "other");
-      Orchestrator.dispatch("prepareToAddOutput", undefined);
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "output");
-      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "output");
+      _elementActions.dispatch("prepareToAddCircuitElement", {
+        type: "output",
+      });
     },
     id: "output",
   },
   {
     text: "A",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "other");
-      Orchestrator.dispatch("prepareToAddGate", { gateType: "and" });
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "and");
-      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "and");
+      _elementActions.dispatch("prepareToAddCircuitElement", { type: "and" });
     },
     id: "and",
   },
   {
     text: "O",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "other");
-      Orchestrator.dispatch("prepareToAddGate", {
-        gateType: "or",
-        noOfInputs: 2,
-      });
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "or");
-      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "or");
+      _elementActions.dispatch("prepareToAddCircuitElement", { type: "or" });
     },
     id: "or",
   },
   {
     text: "N",
     onClick: () => {
-      Orchestrator.dispatch("changeSimulatorClickMode", "other");
-      Orchestrator.dispatch("prepareToAddGate", {
-        gateType: "not",
-      });
-      Orchestrator.dispatch("turnOffButtonSelections", undefined);
-      Orchestrator.dispatch("turnOnButtonSelection", "not");
-      Orchestrator.dispatch("turnOffAllElementSelections", undefined);
+      _generalAppStateActions.dispatch("turnOnButtonSelection", "not");
+      _elementActions.dispatch("prepareToAddCircuitElement", { type: "not" });
     },
     id: "not",
   },
@@ -89,7 +67,7 @@ const buttons: Parameters<typeof Button>[0][] = [
 function Toolbar() {
   return () => html`
     <div class="absolute top-main left-main flex w-toolbar justify-between">
-      ${h(Button, { type: "primary", text: "M" })}
+      ${h(Button, { type: "primary", text: "M", onClick() {}, id: "select" })}
       <div
         class="bg-secondary-dark border border-primary-dark rounded-md flex items-center p-1 px-2"
       >
@@ -97,12 +75,12 @@ function Toolbar() {
           h(Button, {
             type: "secondary",
             text: props.text,
-            onClick: props.onClick,
+            onClick: () => props.onClick?.(props.id),
             id: props.id,
           }),
         )}
       </div>
-      ${h(Button, { type: "primary", text: "?" })}
+      ${h(Button, { type: "primary", text: "?", onClick() {}, id: "select" })}
     </div>
   `;
 }

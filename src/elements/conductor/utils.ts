@@ -1,20 +1,25 @@
+import { ConductorPreviewCoordinates } from "@/stateEntities/generalElementData";
 import {
   ConductorConnectionPoints,
-  ConductorPreviewCoordinates,
-} from "@/entities/visualizationEntities";
+  _elementConnectionPointsActions,
+} from "@/stateEntities/elementConnectionPoints";
 import { Conductor, ConductorOrientation } from "./Conductor";
 import { conductorBodyDimensions } from "./dimensions";
-import Orchestrator from "@/entities/Orchestrator";
 
-export function addConductorConnectionPoint(conductor: Conductor) {
+export function addConductorConnectionPoints(conductor: Conductor) {
   const conductorOriginGlobalConnectionPoint = conductor.toGlobal({
     x: conductorBodyDimensions.origin_X,
     y: conductorBodyDimensions.origin_Y,
   });
   const conductorEndGlobalConnectionPoint = conductor.toGlobal(
-    conductor.conductorEndLocalConnectionPoint,
+    conductor.conductorEndLocalConnectionPoint!,
   );
-  Orchestrator.dispatch("addConductorConnectionPoints", {
+  console.log(
+    conductorOriginGlobalConnectionPoint,
+    conductorEndGlobalConnectionPoint,
+  );
+
+  _elementConnectionPointsActions.dispatch("addConductorConnectionPoints", {
     id: conductor.id,
     connectionPoints: [
       conductorOriginGlobalConnectionPoint,

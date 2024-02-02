@@ -1,4 +1,8 @@
-import { $nodeOutputs, NodeBitValue } from "@/entities/simulationEntities";
+import {
+  _nodeOutputs,
+  _simulationDataActions,
+  NodeBitValue,
+} from "@/stateEntities/simulationData";
 import { Graphics, Text } from "pixi.js";
 import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
 import {
@@ -7,20 +11,20 @@ import {
   selectionRectangeDimensions,
 } from "./dimensions";
 import { stroke } from "@/ui/colors";
-import { adaptEffect } from "promethium-js";
+import { adaptSyncEffect, adaptEffect } from "promethium-js";
 import {
   addOutputConnectionPoint,
   adjustOpacityOnInteract,
   checkForCollisionWithConductorConnectionPoint,
   outputConnectionPointIsBeingHoveredOver,
 } from "../utils";
-import { round } from "@/engines/visualizationEngine/utils";
-import Orchestrator from "@/entities/Orchestrator";
+import { round } from "@/engines/visualization/utils";
 import {
-  elementPositions,
-  outputConnectionPoints,
-} from "@/entities/visualizationEntities";
-import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
+  _elementConnectionPointsActions,
+  _outputConnectionPointsCollection,
+} from "@/stateEntities/elementConnectionPoints";
+import { _elementPositions } from "@/stateEntities/generalElementData";
+import { _derivedAppState } from "@/stateEntities/generalAppState";
 
 export type InputOptions = CircuitElementOptions;
 export class Input extends CircuitElement {
@@ -34,14 +38,16 @@ export class Input extends CircuitElement {
   });
 
   constructor(options: CircuitElementOptions) {
-    const { visualizationEngine, x, y, id } = options;
-    super({ visualizationEngine, x, y, id });
+    const { visualizationEngine, id } = options;
+    super({ visualizationEngine, id });
   }
 
   protected addOutputConnectionPoint() {
-    const position = elementPositions.adaptParticle(this.id)![0];
+    const position = _elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
+      _elementConnectionPointsActions.dispatch("clearOutputConnectionPoints", {
+        id: this.id,
+      });
       addOutputConnectionPoint(this, {
         x: outputTerminalDimensions.center_X,
         y: outputTerminalDimensions.center_Y,
@@ -52,7 +58,7 @@ export class Input extends CircuitElement {
   protected buildInputBody() {
     adaptEffect(() => {
       this.inputBody.clear();
-      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)!();
+      const nodeOutput = _nodeOutputs.adaptDerivative(this.id)!();
       if (nodeOutput === 0) {
         this.inputBody.beginFill("#FFA500", 1);
       } else {
@@ -87,7 +93,7 @@ export class Input extends CircuitElement {
 
   protected buildOutputText() {
     adaptEffect(() => {
-      const nodeOutput = $nodeOutputs.adaptDerivative(this.id)!();
+      const nodeOutput = _nodeOutputs.adaptDerivativeValue(this.id)!;
       this.outputText.text = (nodeOutput as NodeBitValue).toString();
       this.outputText.x = 3;
       this.outputText.y = 2;
@@ -128,12 +134,13 @@ export class Input extends CircuitElement {
   }
 
   init() {
-    this.initInputBody();
-    this.addOutputConnectionPoint();
-    this.initOutputTerminal();
-    this.initOutputText();
-    this.genericInitFunctionality();
-    Orchestrator.dispatch("turnOnElementSelection", this.id);
+    return adaptSyncEffect(() => {
+      this.initInputBody();
+      this.addOutputConnectionPoint();
+      this.initOutputTerminal();
+      this.initOutputText();
+      this.genericInitFunctionality();
+    }, []);
   }
 
   protected initInputBody() {
@@ -152,29 +159,26 @@ export class Input extends CircuitElement {
   }
 
   protected onPointerDown = () => {
-    const simulatorClickMode =
-      $generalSimulatorState.adaptParticle("clickMode")[0]();
-    if (simulatorClickMode === "selecting") {
+    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    if (clickMode === "select") {
       this.genericOnPointerDownFunctionality();
-    } else if (simulatorClickMode === "simulating") {
-      Orchestrator.dispatch("toggleInputValue", this.id);
+    } else if (clickMode === "simulate") {
+      _simulationDataActions.dispatch("toggleInputValue", this.id);
     }
   };
 
   protected onPointerMove = (e: PointerEvent) => {
-    const simulatorClickMode =
-      $generalSimulatorState.adaptParticle("clickMode")[0]();
-    if (simulatorClickMode === "selecting") {
+    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    if (clickMode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
   };
 
   protected onPointerUp = () => {
-    const simulatorClickMode =
-      $generalSimulatorState.adaptParticle("clickMode")[0]();
-    if (simulatorClickMode === "selecting") {
+    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    if (clickMode === "select") {
       this.genericOnPointerUpFunctionality();
-      const connectionPoints = outputConnectionPoints.adaptParticle(
+      const connectionPoints = _outputConnectionPointsCollection.adaptParticle(
         this.id,
       )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {
@@ -182,7 +186,7 @@ export class Input extends CircuitElement {
         const conductorConnectionPointIdOrFalse =
           checkForCollisionWithConductorConnectionPoint(connectionPoint);
         if (conductorConnectionPointIdOrFalse) {
-          Orchestrator.dispatch("addNodeInput", {
+          _simulationDataActions.dispatch("addNodeInput", {
             elementId: conductorConnectionPointIdOrFalse,
             nodeInput: this.id,
           });

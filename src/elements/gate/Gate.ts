@@ -1,6 +1,12 @@
 import { Graphics } from "pixi.js";
 import { stroke } from "@/ui/colors";
-import { UnifiedState, adaptEffect, adaptState, unify } from "promethium-js";
+import {
+  UnifiedState,
+  adaptEffect,
+  adaptState,
+  adaptSyncEffect,
+  unify,
+} from "promethium-js";
 import buildGateBody from "./buildGateBody";
 import {
   gateBodyDimensions,
@@ -16,16 +22,19 @@ import {
   inputConnectionPointIsBeingHoveredOver,
   outputConnectionPointIsBeingHoveredOver,
 } from "../utils";
-import { round } from "@/engines/visualizationEngine/utils";
-import { elementTypes } from "@/entities/sharedEntities";
-import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
-import Orchestrator from "@/entities/Orchestrator";
+import { round } from "@/engines/visualization/utils";
 import {
-  elementPositions,
-  inputConnectionPoints,
-  outputConnectionPoints,
-} from "@/entities/visualizationEntities";
-import { $generalSimulatorState } from "@/entities/generalAppStateEntities";
+  _elementTypes,
+  _elementPositions,
+} from "@/stateEntities/generalElementData";
+import { CircuitElement, CircuitElementOptions } from "../CircuitElement";
+import {
+  _elementConnectionPointsActions,
+  _inputConnectionPointsCollection,
+  _outputConnectionPointsCollection,
+} from "@/stateEntities/elementConnectionPoints";
+import { _derivedAppState } from "@/stateEntities/generalAppState";
+import { _simulationDataActions } from "@/stateEntities/simulationData";
 
 export type GateType = "and" | "or" | "not" | "nand" | "nor" | "xor" | "xnor";
 
@@ -44,8 +53,8 @@ export class Gate extends CircuitElement {
   outputTerminal = new Graphics();
 
   constructor(options: GateOptions) {
-    const { visualizationEngine, x, y, id } = options;
-    super({ visualizationEngine, x, y, id });
+    const { visualizationEngine, id } = options;
+    super({ visualizationEngine, id });
     let defaultNoOfInputs = options.gateType === "not" ? 1 : 2;
     let noOfInputs: number;
     if (options.gateType === "not" || options.noOfInputs === undefined) {
@@ -57,10 +66,12 @@ export class Gate extends CircuitElement {
   }
 
   protected addInputConnectionPoints() {
-    const position = elementPositions.adaptParticle(this.id)![0];
+    const position = _elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.dispatch("clearInputConnectionPoints", { id: this.id });
-      const gateType = elementTypes.adaptParticle(this.id)![0]();
+      _elementConnectionPointsActions.dispatch("clearInputConnectionPoints", {
+        id: this.id,
+      });
+      const gateType = _elementTypes.adaptParticle(this.id)![0]();
       const isNoOfInputsOdd = () => this.noOfInputs() % 2 !== 0;
       if (gateType === "not") {
         this.inputTerminalsOrigin_Y = 0;
@@ -92,9 +103,11 @@ export class Gate extends CircuitElement {
   }
 
   protected addOutputConnectionPoint() {
-    const position = elementPositions.adaptParticle(this.id)![0];
+    const position = _elementPositions.adaptParticle(this.id)![0];
     adaptEffect(() => {
-      Orchestrator.dispatch("clearOutputConnectionPoints", { id: this.id });
+      _elementConnectionPointsActions.dispatch("clearOutputConnectionPoints", {
+        id: this.id,
+      });
       const localConnectionPoint = this.getOutputTerminalLocalConnectionPoint();
       addOutputConnectionPoint(this, localConnectionPoint);
     }, [position]);
@@ -108,7 +121,7 @@ export class Gate extends CircuitElement {
     adaptEffect(() => {
       this.inputTerminals.clear();
       this.inputTerminals.beginFill(stroke["primary-dark"]);
-      const connectionPoints = inputConnectionPoints.adaptParticle(
+      const connectionPoints = _inputConnectionPointsCollection.adaptParticle(
         this.id,
       )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {
@@ -192,12 +205,11 @@ export class Gate extends CircuitElement {
     this.gateBody.destroy();
     this.inputTerminals.destroy();
     this.outputTerminal.destroy();
-    this.selectionRectangle.destroy();
-    this.destroy();
+    this.genericDetonateFunctionality();
   }
 
   protected getOutputTerminalLocalConnectionPoint() {
-    const gateType = elementTypes.adaptParticle(this.id)![0]();
+    const gateType = _elementTypes.adaptParticle(this.id)![0]();
     const circle_Y = gateType === "not" ? "midPoint_Y_not" : "midPoint_Y";
     const x =
       gateBodyDimensions.end_X +
@@ -207,12 +219,13 @@ export class Gate extends CircuitElement {
   }
 
   init() {
-    this.initGateBody();
-    this.addInputConnectionPoints();
-    this.addOutputConnectionPoint();
-    this.initGateTerminals();
-    this.genericInitFunctionality();
-    Orchestrator.dispatch("turnOnElementSelection", this.id);
+    return adaptSyncEffect(() => {
+      this.initGateBody();
+      this.addInputConnectionPoints();
+      this.addOutputConnectionPoint();
+      this.initGateTerminals();
+      this.genericInitFunctionality();
+    }, []);
   }
 
   protected initGateBody() {
@@ -227,30 +240,27 @@ export class Gate extends CircuitElement {
   }
 
   protected onPointerDown = () => {
-    const simulatorClickMode =
-      $generalSimulatorState.adaptParticle("clickMode")[0]();
-    if (simulatorClickMode === "selecting") {
+    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    if (clickMode === "select") {
       this.genericOnPointerDownFunctionality();
     }
   };
 
   protected onPointerMove = (e: PointerEvent) => {
-    const simulatorClickMode =
-      $generalSimulatorState.adaptParticle("clickMode")[0]();
-    if (simulatorClickMode === "selecting") {
+    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    if (clickMode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
   };
 
   protected onPointerUp = () => {
-    const simulatorClickMode =
-      $generalSimulatorState.adaptParticle("clickMode")[0]();
-    if (simulatorClickMode === "selecting") {
+    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    if (clickMode === "select") {
       this.genericOnPointerUpFunctionality();
       // TODO: find a better way to achieve this
       // use `setTimeout` to ensure that operation runs only after all new conductors have been spawned from existing `conductorPreviews`
       setTimeout(() => {
-        const connectionPoints = inputConnectionPoints.adaptParticle(
+        const connectionPoints = _inputConnectionPointsCollection.adaptParticle(
           this.id,
         )![0]();
         for (let i = 0; i < connectionPoints.length; i++) {
@@ -258,7 +268,7 @@ export class Gate extends CircuitElement {
           const conductorConnectionPointIdOrFalse =
             checkForCollisionWithConductorConnectionPoint(connectionPoint);
           if (conductorConnectionPointIdOrFalse) {
-            Orchestrator.dispatch("addNodeInput", {
+            _simulationDataActions.dispatch("addNodeInput", {
               elementId: this.id,
               nodeInput: conductorConnectionPointIdOrFalse,
               position: i,
@@ -267,14 +277,13 @@ export class Gate extends CircuitElement {
         }
       });
       setTimeout(() => {
-        const connectionPoints = outputConnectionPoints.adaptParticle(
-          this.id,
-        )![0]();
+        const connectionPoints =
+          _outputConnectionPointsCollection.adaptParticle(this.id)![0]();
         const connectionPoint = connectionPoints[0];
         const conductorConnectionPointIdOrFalse =
           checkForCollisionWithConductorConnectionPoint(connectionPoint);
         if (conductorConnectionPointIdOrFalse) {
-          Orchestrator.dispatch("addNodeInput", {
+          _simulationDataActions.dispatch("addNodeInput", {
             elementId: conductorConnectionPointIdOrFalse,
             nodeInput: this.id,
           });

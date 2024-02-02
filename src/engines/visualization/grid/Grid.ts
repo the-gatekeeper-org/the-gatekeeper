@@ -1,6 +1,6 @@
 import { stroke } from "@/ui/colors";
 import { Graphics } from "pixi.js";
-import { UnifiedState, adaptEffect, adaptState, unify } from "promethium-js";
+import { UnifiedState, adaptState, adaptEffect, unify } from "promethium-js";
 
 export type GridOptions = {
   x: number;
