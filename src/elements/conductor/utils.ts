@@ -14,11 +14,6 @@ export function addConductorConnectionPoints(conductor: Conductor) {
   const conductorEndGlobalConnectionPoint = conductor.toGlobal(
     conductor.conductorEndLocalConnectionPoint!,
   );
-  console.log(
-    conductorOriginGlobalConnectionPoint,
-    conductorEndGlobalConnectionPoint,
-  );
-
   _elementConnectionPointsActions.dispatch("addConductorConnectionPoints", {
     id: conductor.id,
     connectionPoints: [

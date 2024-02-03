@@ -93,11 +93,6 @@ export class VisualizationEngine {
       circuitElement.cleanup = circuitElement.init();
       this.stage.addChild(circuitElement);
 
-      console.log(
-        this.currentPreparedCircuitElementOptions.globalConnectionPoints,
-        this.currentPreparedCircuitElementOptions.id,
-      );
-
       return circuitElement;
     }
   }
@@ -167,8 +162,6 @@ export class VisualizationEngine {
     position: IPointData;
     offset?: boolean;
   }) {
-    console.log(offset, this.currentPreparedCircuitElementOptions);
-
     if (this.currentPreparedCircuitElementOptions) {
       this.addCircuitElement({
         x: round(position.x) - (offset ? gridGap : 0),
@@ -196,21 +189,17 @@ export class VisualizationEngine {
         sharedConnectionPoints,
         { x: coordinates.current!.x, y: coordinates.current!.y },
       ] as ConductorConnectionPoints;
-      console.log("I'm here before dispatch");
       _elementActions.dispatch("prepareToAddCircuitElement", {
         type: "conductor",
         globalConnectionPoints: globalConnectionPoints_1,
       });
-      console.log("I'm here after dispatch");
       this.spawnCurrentPreparedCircuitElement({
         position: globalConnectionPoints_1[0],
       });
-      console.log("I'm here before dispatch");
       _elementActions.dispatch("prepareToAddCircuitElement", {
         type: "conductor",
         globalConnectionPoints: globalConnectionPoints_2,
       });
-      console.log("I'm here after dispatch");
       this.spawnCurrentPreparedCircuitElement({
         position: globalConnectionPoints_2[0],
       });
@@ -273,10 +262,10 @@ export class VisualizationEngine {
     window.addEventListener("pointermove", (e) => this.onPointerMove(e));
     window.addEventListener("keydown", (e) => {
       if (e.code === "Backspace" || e.code === "Delete") {
-        const selectedElements =
-          _generalElementData.adaptParticleValue("selectedElements");
-        selectedElements.forEach((selectedElement) => {
-          _elementActions.dispatch("removeCircuitElement", selectedElement);
+        const elementSelections =
+          _generalElementData.adaptParticleValue("elementSelections");
+        elementSelections.forEach((elementSelection) => {
+          _elementActions.dispatch("removeCircuitElement", elementSelection);
         });
       }
     });

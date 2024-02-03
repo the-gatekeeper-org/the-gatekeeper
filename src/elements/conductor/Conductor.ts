@@ -105,7 +105,6 @@ export class Conductor extends CircuitElement {
     adaptEffect(() => {
       const connectionPoints =
         _conductorConnectionPointsCollection.adaptParticle(this.id)![0]();
-      console.log(connectionPoints, this.id);
       this.conductorEndLocalConnectionPoint = this.toLocal(connectionPoints[1]);
     });
   }

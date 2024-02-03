@@ -67,7 +67,7 @@ export abstract class CircuitElement extends Container {
     this.selectionRectangle.clear();
     if (!this.isBeingDragged()) {
       const isSelected = _generalElementData
-        .adaptParticleValue("selectedElements")
+        .adaptParticleValue("elementSelections")
         .includes(this.id);
       if (isSelected) {
         this.selectionRectangle.lineStyle({

@@ -57,10 +57,10 @@ export const _elementActions = new ActionEntity({
         return simulationEngine.evaluateCircuitElement({ id, type });
       }),
     );
+    _generalElementDataActions.dispatch("resetElementSelections", undefined);
     _generalElementDataActions.dispatch("turnOnElementSelection", id);
   },
   removeCircuitElement(id: CircuitElementId) {
-    _generalElementDataActions.dispatch("resetElementSelections", undefined);
     _elementTypes.deleteParticle(id);
     _inputConnectionPointsCollection.deleteParticle(id);
     _outputConnectionPointsCollection.deleteParticle(id);
@@ -71,6 +71,7 @@ export const _elementActions = new ActionEntity({
     _elementPositions.deleteParticle(id);
     _nodeInputs.deleteParticles([id]);
     _nodeOutputs.deleteDerivatives([id]);
+    _generalElementDataActions.dispatch("resetElementSelections", undefined);
   },
   prepareToAddCircuitElement({
     type,

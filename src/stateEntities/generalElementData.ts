@@ -31,13 +31,13 @@ export type ConductorPreviewCoordinates = {
 };
 
 export const _generalElementData = new ParticleEntity<{
-  selectedElements: CircuitElementId[];
+  elementSelections: CircuitElementId[];
   conductorPreviewData: {
     coordinates: ConductorPreviewCoordinates;
     isBeingDrawn: boolean;
   };
 }>({
-  selectedElements: [],
+  elementSelections: [],
   conductorPreviewData: {
     coordinates: {
       previous: null,
@@ -51,32 +51,30 @@ export const _generalElementData = new ParticleEntity<{
 export const _generalElementDataActions = new ActionEntity({
   toggleElementSelection(id: CircuitElementId) {
     const isSelected = _generalElementData
-      .adaptParticleValue("selectedElements")
+      .adaptParticleValue("elementSelections")
       .includes(id);
     isSelected
       ? _generalElementDataActions.dispatch("turnOffElementSelection", id)
       : _generalElementDataActions.dispatch("turnOnElementSelection", id);
   },
   turnOffElementSelection(id: CircuitElementId) {
-    const setSelectedElements =
-      _generalElementData.adaptParticleSetter("selectedElements");
-    setSelectedElements((selectedElements) =>
-      selectedElements.filter((selectedElement) => selectedElement !== id),
+    const setElementSelections =
+      _generalElementData.adaptParticleSetter("elementSelections");
+    setElementSelections((elementSelections) =>
+      elementSelections.filter((elementSelection) => elementSelection !== id),
     );
   },
   turnOnElementSelection(id: CircuitElementId) {
-    // use `setTimeout` so that element selection are turned on after resetting all element selections
     setTimeout(() => {
-      const setSelectedElements =
-        _generalElementData.adaptParticleSetter("selectedElements");
-
-      setSelectedElements((selectedElements) => [...selectedElements, id]);
+      const setElementSelections =
+        _generalElementData.adaptParticleSetter("elementSelections");
+      setElementSelections((elementSelections) => [...elementSelections, id]);
     });
   },
   resetElementSelections() {
-    const setSelectedElements =
-      _generalElementData.adaptParticleSetter("selectedElements");
-    setSelectedElements([]);
+    const setElementSelections =
+      _generalElementData.adaptParticleSetter("elementSelections");
+    setElementSelections([]);
   },
   changeElementPosition({
     id,
