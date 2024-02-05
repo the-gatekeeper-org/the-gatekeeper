@@ -1,12 +1,12 @@
 import { CircuitElementId } from "@/stateEntities/utils";
 import { Container, Graphics } from "pixi.js";
-import { adaptEffect, adaptState, unify } from "promethium-js";
+import { adaptSyncEffect, adaptState, unify } from "promethium-js";
 import { VisualizationEngine } from "@/engines/visualization/VisualizationEngine";
 import {
-  _elementPositions,
-  _generalElementData,
-  _generalElementDataActions,
-} from "@/stateEntities/generalElementData";
+  $circuitElementPositions,
+  $generalCircuitElementData,
+  _generalCircuitElementDataActions,
+} from "@/stateEntities/generalCircuitElementData";
 import { bg, border } from "@/ui/colors";
 
 export type CircuitElementOptions = {
@@ -25,9 +25,6 @@ export abstract class CircuitElement extends Container {
   constructor(options: CircuitElementOptions) {
     super();
     this.visualizationEngine = options.visualizationEngine;
-    adaptEffect(() => {
-      this.position = _elementPositions.adaptParticleValue(this.id)!;
-    });
     this.id = options.id;
   }
 
@@ -47,15 +44,26 @@ export abstract class CircuitElement extends Container {
     this.visualizationEngine.dragTarget = this;
   }
 
-  abstract init(): () => void;
+  init() {
+    return adaptSyncEffect(() => {
+      adaptSyncEffect(() => {
+        this.position = $circuitElementPositions.adaptParticleValue(this.id)!;
+      });
+      this.specificInitFunctionality();
+      this.initSelectionRectangle();
+      this.cullable = true;
+    }, []);
+  }
 
   protected initSelectionRectangle() {
     this.buildSelectionRectangle();
-    this.selectionRectangle
-      .on("pointerdown", this.onPointerDown)
-      .on("pointerup", this.onPointerUp)
-      .on("pointerupoutside", this.onPointerUp)
-      .on("pointermove", this.onPointerMove);
+    this.selectionRectangle.addEventListener("pointerdown", this.onPointerDown);
+    this.selectionRectangle.addEventListener("pointerup", this.onPointerUp);
+    this.selectionRectangle.addEventListener(
+      "pointerupoutside",
+      this.onPointerUp,
+    );
+    this.selectionRectangle.addEventListener("pointermove", this.onPointerMove);
     this.selectionRectangle.eventMode = "static";
     this.selectionRectangle.cursor = "pointer";
     this.addChild(this.selectionRectangle);
@@ -66,8 +74,8 @@ export abstract class CircuitElement extends Container {
   protected genericBuildSelectionRectangleFunctionality(strokeWidth: number) {
     this.selectionRectangle.clear();
     if (!this.isBeingDragged()) {
-      const isSelected = _generalElementData
-        .adaptParticleValue("elementSelections")
+      const isSelected = $generalCircuitElementData
+        .adaptParticleValue("circuitElementSelections")
         .includes(this.id);
       if (isSelected) {
         this.selectionRectangle.lineStyle({
@@ -79,11 +87,6 @@ export abstract class CircuitElement extends Container {
     this.selectionRectangle.beginFill(bg["primary-dark"], 0.01);
   }
 
-  protected genericInitFunctionality() {
-    this.initSelectionRectangle();
-    this.cullable = true;
-  }
-
   protected genericDetonateFunctionality() {
     this.selectionRectangle.destroy();
     this.destroy();
@@ -92,7 +95,10 @@ export abstract class CircuitElement extends Container {
 
   protected genericOnPointerDownFunctionality() {
     this.dragStart();
-    _generalElementDataActions.dispatch("toggleElementSelection", this.id);
+    _generalCircuitElementDataActions.dispatch(
+      "toggleCircuitElementSelection",
+      this.id,
+    );
   }
 
   protected genericOnPointerMoveFunctionality(e: PointerEvent) {
@@ -104,11 +110,18 @@ export abstract class CircuitElement extends Container {
     this.dragEnd();
     if (this.isBeingDragged()) {
       this.isBeingDragged(false);
-      _generalElementDataActions.dispatch("turnOnElementSelection", this.id);
+      _generalCircuitElementDataActions.dispatch(
+        "turnOnCircuitElementSelection",
+        this.id,
+      );
     }
   }
 
   protected abstract onPointerDown(): void;
+
   protected abstract onPointerMove(e: PointerEvent): void;
+
   protected abstract onPointerUp(): void;
+
+  abstract specificInitFunctionality(): void;
 }

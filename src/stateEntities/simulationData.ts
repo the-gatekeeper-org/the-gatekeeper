@@ -9,13 +9,14 @@ import { CircuitElementId } from "./utils";
 export type NodeBitValue = 0 | 1;
 export type NodeInput = NodeBitValue | CircuitElementId;
 export type NodeOutput = NodeBitValue | "floating";
+// please leave this comment here! will be used later on
 // type OtherNodeValues = "pullUp" |"pullDown" | "pending" | CircuitElementId | "error"
 
-export const _nodeInputs = new ParticleEntity<
+export const $nodeInputsCollection = new ParticleEntity<
   Record<CircuitElementId, NodeInput[]>
 >({});
 
-export const _nodeOutputs = new DerivativeEntity<
+export const $nodeOutputsCollection = new DerivativeEntity<
   Record<CircuitElementId, Getter<NodeOutput>>
 >({});
 
@@ -29,7 +30,7 @@ export const _simulationDataActions = new ActionEntity({
     nodeInput: CircuitElementId;
     position?: number;
   }) {
-    const setNodeInputs = _nodeInputs.adaptParticle(elementId)![1];
+    const setNodeInputs = $nodeInputsCollection.adaptParticle(elementId)![1];
     setNodeInputs((nodeInputs) => {
       if (position !== undefined) {
         nodeInputs[position] = nodeInput;
@@ -41,7 +42,7 @@ export const _simulationDataActions = new ActionEntity({
     });
   },
   toggleInputValue(id: CircuitElementId) {
-    _nodeInputs.adaptParticleSetter(id)!(([value]) =>
+    $nodeInputsCollection.adaptParticleSetter(id)!(([value]) =>
       value === 0 ? [1] : [0],
     );
   },

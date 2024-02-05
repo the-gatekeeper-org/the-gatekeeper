@@ -3,7 +3,7 @@ import { html } from "lit";
 import { map } from "lit/directives/map.js";
 import Button from "./Button";
 import { _generalAppStateActions } from "@/stateEntities/generalAppState";
-import { _elementActions } from "@/elements/actions";
+import { _circuitElementActions } from "@/circuitElements/actions";
 
 const buttons: Parameters<typeof Button>[0][] = [
   {
@@ -24,7 +24,9 @@ const buttons: Parameters<typeof Button>[0][] = [
     text: "I",
     onClick: () => {
       _generalAppStateActions.dispatch("turnOnButtonSelection", "input");
-      _elementActions.dispatch("prepareToAddCircuitElement", { type: "input" });
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
+        type: "input",
+      });
     },
     id: "input",
   },
@@ -32,7 +34,7 @@ const buttons: Parameters<typeof Button>[0][] = [
     text: "Y",
     onClick: () => {
       _generalAppStateActions.dispatch("turnOnButtonSelection", "output");
-      _elementActions.dispatch("prepareToAddCircuitElement", {
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
         type: "output",
       });
     },
@@ -42,7 +44,9 @@ const buttons: Parameters<typeof Button>[0][] = [
     text: "A",
     onClick: () => {
       _generalAppStateActions.dispatch("turnOnButtonSelection", "and");
-      _elementActions.dispatch("prepareToAddCircuitElement", { type: "and" });
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
+        type: "and",
+      });
     },
     id: "and",
   },
@@ -50,7 +54,9 @@ const buttons: Parameters<typeof Button>[0][] = [
     text: "O",
     onClick: () => {
       _generalAppStateActions.dispatch("turnOnButtonSelection", "or");
-      _elementActions.dispatch("prepareToAddCircuitElement", { type: "or" });
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
+        type: "or",
+      });
     },
     id: "or",
   },
@@ -58,7 +64,9 @@ const buttons: Parameters<typeof Button>[0][] = [
     text: "N",
     onClick: () => {
       _generalAppStateActions.dispatch("turnOnButtonSelection", "not");
-      _elementActions.dispatch("prepareToAddCircuitElement", { type: "not" });
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
+        type: "not",
+      });
     },
     id: "not",
   },

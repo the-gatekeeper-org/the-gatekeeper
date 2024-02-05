@@ -1,6 +1,9 @@
-import { _nodeInputs, _nodeOutputs } from "@/stateEntities/simulationData";
+import {
+  $nodeInputsCollection,
+  $nodeOutputsCollection,
+} from "@/stateEntities/simulationData";
 import { CircuitElementId } from "@/stateEntities/utils";
-import { CircuitElementType } from "@/stateEntities/generalElementData";
+import { CircuitElementType } from "@/stateEntities/generalCircuitElementData";
 import { circuitElementEvaluatorFns } from "./circuitElementEvaluatorFns";
 
 export class SimulationEngine {
@@ -15,10 +18,12 @@ export class SimulationEngine {
   }
 
   getActualOutputOfOutput(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput = nodeInputs[0];
 
-    return _nodeOutputs.adaptDerivativeValue(nodeInput as CircuitElementId);
+    return $nodeOutputsCollection.adaptDerivativeValue(
+      nodeInput as CircuitElementId,
+    );
   }
 }
 

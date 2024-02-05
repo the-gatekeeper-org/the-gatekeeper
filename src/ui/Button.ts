@@ -1,7 +1,7 @@
 import { html } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import {
-  _generalAppState,
+  $generalAppState,
   ButtonSelection,
 } from "@/stateEntities/generalAppState";
 
@@ -13,7 +13,7 @@ function Button(props: {
 }) {
   return () => {
     const isSelected =
-      props.id === _generalAppState.adaptParticleValue("buttonSelections");
+      props.id === $generalAppState.adaptParticleValue("buttonSelections");
     const variants = classMap({
       "bg-secondary-dark border border-primary-dark hover:scale-105":
         props.type === undefined || props.type === "primary",

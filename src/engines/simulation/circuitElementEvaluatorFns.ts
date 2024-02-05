@@ -1,11 +1,11 @@
 import {
-  _nodeInputs,
-  _nodeOutputs,
+  $nodeInputsCollection,
+  $nodeOutputsCollection,
   NodeBitValue,
   NodeOutput,
 } from "@/stateEntities/simulationData";
 import { CircuitElementId } from "@/stateEntities/utils";
-import { CircuitElementType } from "@/stateEntities/generalElementData";
+import { CircuitElementType } from "@/stateEntities/generalCircuitElementData";
 
 const and = (a: NodeBitValue, b: NodeBitValue) => a && b;
 const or = (a: NodeBitValue, b: NodeBitValue) => a || b;
@@ -20,13 +20,13 @@ export const circuitElementEvaluatorFns: Record<
   (id: CircuitElementId) => NodeOutput
 > = {
   and(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
-    const nodeInput_1_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_1_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_1 as CircuitElementId,
     )!();
-    const nodeInput_2_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_2_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_2 as CircuitElementId,
     )!();
     if (
@@ -39,13 +39,13 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   or(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
-    const nodeInput_1_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_1_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_1 as CircuitElementId,
     )!();
-    const nodeInput_2_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_2_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_2 as CircuitElementId,
     )!();
     if (
@@ -58,9 +58,9 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   not(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput = nodeInputs[0];
-    const nodeInput_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput as CircuitElementId,
     )!();
     if (nodeInput_Output === "floating") {
@@ -70,13 +70,13 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   nand(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
-    const nodeInput_1_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_1_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_1 as CircuitElementId,
     )!();
-    const nodeInput_2_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_2_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_2 as CircuitElementId,
     )!();
     if (
@@ -89,13 +89,13 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   nor(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
-    const nodeInput_1_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_1_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_1 as CircuitElementId,
     )!();
-    const nodeInput_2_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_2_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_2 as CircuitElementId,
     )!();
     if (
@@ -108,13 +108,13 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   xor(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
-    const nodeInput_1_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_1_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_1 as CircuitElementId,
     )!();
-    const nodeInput_2_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_2_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_2 as CircuitElementId,
     )!();
     if (
@@ -127,13 +127,13 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   xnor(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     const nodeInput_1 = nodeInputs[0];
     const nodeInput_2 = nodeInputs[1];
-    const nodeInput_1_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_1_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_1 as CircuitElementId,
     )!();
-    const nodeInput_2_Output = _nodeOutputs.adaptDerivative(
+    const nodeInput_2_Output = $nodeOutputsCollection.adaptDerivative(
       nodeInput_2 as CircuitElementId,
     )!();
     if (
@@ -146,7 +146,7 @@ export const circuitElementEvaluatorFns: Record<
     }
   },
   input(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
 
     return nodeInputs[0] as NodeBitValue;
   },
@@ -154,10 +154,10 @@ export const circuitElementEvaluatorFns: Record<
     return "floating";
   },
   conductor(id: CircuitElementId) {
-    const nodeInputs = _nodeInputs.adaptParticle(id)![0]();
+    const nodeInputs = $nodeInputsCollection.adaptParticle(id)![0]();
     for (let i = 0; i < nodeInputs.length; i++) {
       const nodeInput = nodeInputs[i];
-      const nodeInput_Output = _nodeOutputs.adaptDerivative(
+      const nodeInput_Output = $nodeOutputsCollection.adaptDerivative(
         nodeInput as CircuitElementId,
       )!();
       if (nodeInput_Output === 0 || nodeInput_Output === 1) {

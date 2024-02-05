@@ -1,5 +1,5 @@
 import {
-  _nodeOutputs,
+  $nodeOutputsCollection,
   _simulationDataActions,
   NodeBitValue,
 } from "@/stateEntities/simulationData";
@@ -11,7 +11,7 @@ import {
   selectionRectangeDimensions,
 } from "./dimensions";
 import { stroke } from "@/ui/colors";
-import { adaptSyncEffect, adaptEffect } from "promethium-js";
+import { adaptSyncEffect } from "promethium-js";
 import {
   addOutputConnectionPoint,
   adjustOpacityOnInteract,
@@ -20,11 +20,11 @@ import {
 } from "../utils";
 import { round } from "@/engines/visualization/utils";
 import {
-  _elementConnectionPointsActions,
-  _outputConnectionPointsCollection,
-} from "@/stateEntities/elementConnectionPoints";
-import { _elementPositions } from "@/stateEntities/generalElementData";
-import { _derivedAppState } from "@/stateEntities/generalAppState";
+  _circuitElementConnectionPointsActions,
+  $outputConnectionPointsCollection,
+} from "@/stateEntities/circuitElementConnectionPoints";
+import { $circuitElementPositions } from "@/stateEntities/generalCircuitElementData";
+import { $derivedAppState } from "@/stateEntities/generalAppState";
 
 export type InputOptions = CircuitElementOptions;
 export class Input extends CircuitElement {
@@ -43,11 +43,14 @@ export class Input extends CircuitElement {
   }
 
   protected addOutputConnectionPoint() {
-    const position = _elementPositions.adaptParticle(this.id)![0];
-    adaptEffect(() => {
-      _elementConnectionPointsActions.dispatch("clearOutputConnectionPoints", {
-        id: this.id,
-      });
+    const position = $circuitElementPositions.adaptParticle(this.id)![0];
+    adaptSyncEffect(() => {
+      _circuitElementConnectionPointsActions.dispatch(
+        "clearOutputConnectionPoints",
+        {
+          id: this.id,
+        },
+      );
       addOutputConnectionPoint(this, {
         x: outputTerminalDimensions.center_X,
         y: outputTerminalDimensions.center_Y,
@@ -56,9 +59,9 @@ export class Input extends CircuitElement {
   }
 
   protected buildInputBody() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       this.inputBody.clear();
-      const nodeOutput = _nodeOutputs.adaptDerivative(this.id)!();
+      const nodeOutput = $nodeOutputsCollection.adaptDerivative(this.id)!();
       if (nodeOutput === 0) {
         this.inputBody.beginFill("#FFA500", 1);
       } else {
@@ -79,7 +82,7 @@ export class Input extends CircuitElement {
   }
 
   protected buildOutputTerminal() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       this.outputTerminal.clear();
       this.outputTerminal.beginFill(stroke["primary-dark"]);
       this.outputTerminal.drawCircle(
@@ -92,8 +95,8 @@ export class Input extends CircuitElement {
   }
 
   protected buildOutputText() {
-    adaptEffect(() => {
-      const nodeOutput = _nodeOutputs.adaptDerivativeValue(this.id)!;
+    adaptSyncEffect(() => {
+      const nodeOutput = $nodeOutputsCollection.adaptDerivativeValue(this.id)!;
       this.outputText.text = (nodeOutput as NodeBitValue).toString();
       this.outputText.x = 3;
       this.outputText.y = 2;
@@ -101,7 +104,7 @@ export class Input extends CircuitElement {
   }
 
   protected buildSelectionRectangle() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       this.genericBuildSelectionRectangleFunctionality(
         selectionRectangeDimensions.strokeWidth,
       );
@@ -133,14 +136,11 @@ export class Input extends CircuitElement {
     this.genericDetonateFunctionality();
   }
 
-  init() {
-    return adaptSyncEffect(() => {
-      this.initInputBody();
-      this.addOutputConnectionPoint();
-      this.initOutputTerminal();
-      this.initOutputText();
-      this.genericInitFunctionality();
-    }, []);
+  specificInitFunctionality() {
+    this.initInputBody();
+    this.addOutputConnectionPoint();
+    this.initOutputTerminal();
+    this.initOutputText();
   }
 
   protected initInputBody() {
@@ -159,7 +159,7 @@ export class Input extends CircuitElement {
   }
 
   protected onPointerDown = () => {
-    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
     if (clickMode === "select") {
       this.genericOnPointerDownFunctionality();
     } else if (clickMode === "simulate") {
@@ -168,17 +168,17 @@ export class Input extends CircuitElement {
   };
 
   protected onPointerMove = (e: PointerEvent) => {
-    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
     if (clickMode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
   };
 
   protected onPointerUp = () => {
-    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
     if (clickMode === "select") {
       this.genericOnPointerUpFunctionality();
-      const connectionPoints = _outputConnectionPointsCollection.adaptParticle(
+      const connectionPoints = $outputConnectionPointsCollection.adaptParticle(
         this.id,
       )![0]();
       for (let i = 0; i < connectionPoints.length; i++) {

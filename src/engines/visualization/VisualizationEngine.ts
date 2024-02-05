@@ -1,5 +1,5 @@
 import { Container, Graphics, IPointData, Renderer, Ticker } from "pixi.js";
-import { Gate } from "@/elements/gate/Gate";
+import { Gate } from "@/circuitElements/gate/Gate";
 import { bg, border } from "@/ui/colors";
 import { Grid, GridOptions } from "@/engines/visualization/grid/Grid";
 import { adaptEffect, adaptState, unify } from "promethium-js";
@@ -7,25 +7,23 @@ import {
   connectionPointSelectionCircleDimensions,
   gridGap,
 } from "./dimensions";
-import { Conductor } from "@/elements/conductor/Conductor";
+import { Conductor } from "@/circuitElements/conductor/Conductor";
 import { round } from "./utils";
 import {
-  _generalElementData,
-  _elementTypes,
+  $generalCircuitElementData,
   CircuitElementType,
-  _generalElementDataActions,
-} from "@/stateEntities/generalElementData";
-import { ConductorConnectionPoints } from "@/stateEntities/elementConnectionPoints";
-import { CircuitElement } from "@/elements/CircuitElement";
-import { Input } from "@/elements/input/Input";
-import { Output } from "@/elements/output/Output";
+  _generalCircuitElementDataActions,
+} from "@/stateEntities/generalCircuitElementData";
+import { ConductorConnectionPoints } from "@/stateEntities/circuitElementConnectionPoints";
+import { CircuitElement } from "@/circuitElements/CircuitElement";
+import { Input } from "@/circuitElements/input/Input";
+import { Output } from "@/circuitElements/output/Output";
 import {
-  _derivedAppState,
-  _generalAppState,
+  $derivedAppState,
   _generalAppStateActions,
 } from "@/stateEntities/generalAppState";
 import { CircuitElementId } from "@/stateEntities/utils";
-import { _elementActions } from "@/elements/actions";
+import { _circuitElementActions } from "@/circuitElements/actions";
 
 interface GlobalThis {
   __PIXI_STAGE__: Container;
@@ -82,7 +80,7 @@ export class VisualizationEngine {
         id: this.currentPreparedCircuitElementOptions.id,
         gateType: this.currentPreparedCircuitElementOptions.type,
       });
-      _elementActions.dispatch("addCircuitElement", {
+      _circuitElementActions.dispatch("addCircuitElement", {
         id: this.currentPreparedCircuitElementOptions.id,
         type: this.currentPreparedCircuitElementOptions.type,
         position,
@@ -127,12 +125,12 @@ export class VisualizationEngine {
   protected conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(
     e: PointerEvent,
   ) {
-    const conductorPreviewData = _generalElementData.adaptParticleValue(
+    const conductorPreviewData = $generalCircuitElementData.adaptParticleValue(
       "conductorPreviewData",
     );
     if (conductorPreviewData.isBeingDrawn) {
       const pointerCoordinates = { x: round(e.x), y: round(e.y) };
-      _generalElementDataActions.dispatch("updateConductorPreview", {
+      _generalCircuitElementDataActions.dispatch("updateConductorPreview", {
         previousCoordinates: conductorPreviewData.coordinates.current,
         currentCoordinates: pointerCoordinates,
         startingCoordinates: conductorPreviewData.coordinates.starting,
@@ -146,7 +144,7 @@ export class VisualizationEngine {
   protected conditionallyInitDrawingOfConductorPreviewVisuals(e: PointerEvent) {
     if (this.connectionPointIsBeingHoveredOver()) {
       const pointerCoordinates = { x: round(e.x), y: round(e.y) };
-      _generalElementDataActions.dispatch("updateConductorPreview", {
+      _generalCircuitElementDataActions.dispatch("updateConductorPreview", {
         previousCoordinates: pointerCoordinates,
         currentCoordinates: pointerCoordinates,
         startingCoordinates: this.connectionPointSelectionCirclePosition(),
@@ -172,7 +170,7 @@ export class VisualizationEngine {
   }
 
   protected conditionallySpawnPreviewConductors() {
-    const conductorPreviewData = _generalElementData.adaptParticleValue(
+    const conductorPreviewData = $generalCircuitElementData.adaptParticleValue(
       "conductorPreviewData",
     );
     if (conductorPreviewData.isBeingDrawn) {
@@ -189,14 +187,14 @@ export class VisualizationEngine {
         sharedConnectionPoints,
         { x: coordinates.current!.x, y: coordinates.current!.y },
       ] as ConductorConnectionPoints;
-      _elementActions.dispatch("prepareToAddCircuitElement", {
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
         type: "conductor",
         globalConnectionPoints: globalConnectionPoints_1,
       });
       this.spawnCurrentPreparedCircuitElement({
         position: globalConnectionPoints_1[0],
       });
-      _elementActions.dispatch("prepareToAddCircuitElement", {
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
         type: "conductor",
         globalConnectionPoints: globalConnectionPoints_2,
       });
@@ -262,10 +260,15 @@ export class VisualizationEngine {
     window.addEventListener("pointermove", (e) => this.onPointerMove(e));
     window.addEventListener("keydown", (e) => {
       if (e.code === "Backspace" || e.code === "Delete") {
-        const elementSelections =
-          _generalElementData.adaptParticleValue("elementSelections");
-        elementSelections.forEach((elementSelection) => {
-          _elementActions.dispatch("removeCircuitElement", elementSelection);
+        const circuitElementSelections =
+          $generalCircuitElementData.adaptParticleValue(
+            "circuitElementSelections",
+          );
+        circuitElementSelections.forEach((circuitElementSelection) => {
+          _circuitElementActions.dispatch(
+            "removeCircuitElement",
+            circuitElementSelection,
+          );
         });
       }
     });
@@ -291,19 +294,25 @@ export class VisualizationEngine {
         this.dragTargetOrigin.x + (e.screenX - this.dragOrigin.x);
       const newDragTarget_y =
         this.dragTargetOrigin.y + (e.screenY - this.dragOrigin.y);
-      _generalElementDataActions.dispatch("changeElementPosition", {
-        id: this.dragTarget.id,
-        x: newDragTarget_x,
-        y: newDragTarget_y,
-      });
+      _generalCircuitElementDataActions.dispatch(
+        "changeCircuitElementPosition",
+        {
+          id: this.dragTarget.id,
+          x: newDragTarget_x,
+          y: newDragTarget_y,
+        },
+      );
     }
   }
 
   protected onPointerDown(e: PointerEvent) {
-    _generalElementDataActions.dispatch("resetElementSelections", undefined);
+    _generalCircuitElementDataActions.dispatch(
+      "resetCircuitElementSelections",
+      undefined,
+    );
     this.prepareToDragTarget(e);
     this.spawnCurrentPreparedCircuitElement({ position: e, offset: true });
-    const clickMode = _derivedAppState.adaptDerivativeValue("clickMode");
+    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
     if (clickMode === "other" || clickMode === "select") {
       _generalAppStateActions.dispatch("resetButtonSelection", undefined);
     } else {
@@ -314,7 +323,7 @@ export class VisualizationEngine {
 
   protected onPointerUp() {
     this.conditionallySpawnPreviewConductors();
-    _generalElementDataActions.dispatch("updateConductorPreview", {
+    _generalCircuitElementDataActions.dispatch("updateConductorPreview", {
       previousCoordinates: null,
       currentCoordinates: null,
       startingCoordinates: null,

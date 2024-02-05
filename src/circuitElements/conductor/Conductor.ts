@@ -1,18 +1,18 @@
 import {
-  _generalElementData,
-  _elementPositions,
-} from "@/stateEntities/generalElementData";
+  $generalCircuitElementData,
+  $circuitElementPositions,
+} from "@/stateEntities/generalCircuitElementData";
 import {
-  _conductorConnectionPointsCollection,
-  _elementConnectionPointsActions,
-} from "@/stateEntities/elementConnectionPoints";
+  $conductorConnectionPointsCollection,
+  _circuitElementConnectionPointsActions,
+} from "@/stateEntities/circuitElementConnectionPoints";
 import { Graphics, IPointData } from "pixi.js";
 import {
   conductorBodyDimensions,
   selectionRectangeDimensions,
 } from "./dimensions";
 import { stroke } from "@/ui/colors";
-import { adaptEffect, adaptSyncEffect } from "promethium-js";
+import { adaptSyncEffect } from "promethium-js";
 import {
   directionHasRestarted,
   getConductorLengthFromConnectionPoints,
@@ -27,7 +27,7 @@ import {
   conductorConnectionPointIsBeingHoveredOver,
 } from "../utils";
 import { round } from "@/engines/visualization/utils";
-import { _derivedAppState } from "@/stateEntities/generalAppState";
+import { $derivedAppState } from "@/stateEntities/generalAppState";
 import { _simulationDataActions } from "@/stateEntities/simulationData";
 
 export type ConductorOrientation = "h" | "v";
@@ -46,11 +46,10 @@ export class Conductor extends CircuitElement {
   }
 
   static buildConductorPreview() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       Conductor.conductorPreview.clear();
-      const conductorPreviewData = _generalElementData.adaptParticleValue(
-        "conductorPreviewData",
-      );
+      const conductorPreviewData =
+        $generalCircuitElementData.adaptParticleValue("conductorPreviewData");
       if (conductorPreviewData.isBeingDrawn) {
         const coordinates = conductorPreviewData.coordinates;
         if (
@@ -91,29 +90,25 @@ export class Conductor extends CircuitElement {
   }
 
   protected addConductorConnectionPoints() {
-    const position = _elementPositions.adaptParticle(this.id)![0];
-    adaptEffect(() => {
-      _elementConnectionPointsActions.dispatch(
-        "clearConductorConnectionPoints",
-        { id: this.id },
-      );
+    const position = $circuitElementPositions.adaptParticleGetter(this.id)!;
+    adaptSyncEffect(() => {
       addConductorConnectionPoints(this);
     }, [position]);
   }
 
   protected setConductorEndGlobalConnectionPoint() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       const connectionPoints =
-        _conductorConnectionPointsCollection.adaptParticle(this.id)![0]();
+        $conductorConnectionPointsCollection.adaptParticleValue(this.id)!;
       this.conductorEndLocalConnectionPoint = this.toLocal(connectionPoints[1]);
     });
   }
 
   protected buildConductorBody() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       this.conductorBody.clear();
       const connectionPoints =
-        _conductorConnectionPointsCollection.adaptParticle(this.id)![0]();
+        $conductorConnectionPointsCollection.adaptParticle(this.id)![0]();
       if (connectionPoints[0] && connectionPoints[1]) {
         const origin = this.toLocal(connectionPoints[0]);
         const end = this.toLocal(connectionPoints[1]);
@@ -130,12 +125,12 @@ export class Conductor extends CircuitElement {
   }
 
   protected buildSelectionRectangle() {
-    adaptEffect(() => {
+    adaptSyncEffect(() => {
       this.genericBuildSelectionRectangleFunctionality(
         selectionRectangeDimensions.strokeWidth,
       );
       const connectionPoints =
-        _conductorConnectionPointsCollection.adaptParticle(this.id)![0]();
+        $conductorConnectionPointsCollection.adaptParticle(this.id)![0]();
       if (connectionPoints[0] && connectionPoints[1]) {
         const orientation =
           getConductorOrientationFromConnectionPoints(connectionPoints);
@@ -215,13 +210,10 @@ export class Conductor extends CircuitElement {
     this.genericDetonateFunctionality();
   }
 
-  init() {
-    return adaptSyncEffect(() => {
-      this.setConductorEndGlobalConnectionPoint();
-      this.addConductorConnectionPoints();
-      this.initConductorBody();
-      this.genericInitFunctionality();
-    }, []);
+  specificInitFunctionality() {
+    this.setConductorEndGlobalConnectionPoint();
+    this.addConductorConnectionPoints();
+    this.initConductorBody();
   }
 
   protected initConductorBody() {
@@ -231,7 +223,7 @@ export class Conductor extends CircuitElement {
 
   protected onPointerDown = () => {
     const simulatorClickMode =
-      _derivedAppState.adaptDerivativeValue("clickMode");
+      $derivedAppState.adaptDerivativeValue("clickMode");
     if (simulatorClickMode === "select") {
       this.genericOnPointerDownFunctionality();
     }
@@ -239,7 +231,7 @@ export class Conductor extends CircuitElement {
 
   protected onPointerMove = (e: PointerEvent) => {
     const simulatorClickMode =
-      _derivedAppState.adaptDerivativeValue("clickMode");
+      $derivedAppState.adaptDerivativeValue("clickMode");
     if (simulatorClickMode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
@@ -247,7 +239,7 @@ export class Conductor extends CircuitElement {
 
   protected onPointerUp = () => {
     const simulatorClickMode =
-      _derivedAppState.adaptDerivativeValue("clickMode");
+      $derivedAppState.adaptDerivativeValue("clickMode");
     if (simulatorClickMode === "select") {
       this.genericOnPointerUpFunctionality();
     }

@@ -9,14 +9,14 @@ export type ButtonSelection =
   | "or"
   | "not";
 
-export const _generalAppState = new ParticleEntity({
+export const $generalAppState = new ParticleEntity({
   buttonSelections: "select" as ButtonSelection,
 });
 
-export const _derivedAppState = new DerivativeEntity({
+export const $derivedAppState = new DerivativeEntity({
   clickMode: () => {
     const buttonSelection =
-      _generalAppState.adaptParticleValue("buttonSelections");
+      $generalAppState.adaptParticleValue("buttonSelections");
     if (buttonSelection === "select" || buttonSelection === "simulate") {
       return buttonSelection;
     } else {
@@ -27,9 +27,9 @@ export const _derivedAppState = new DerivativeEntity({
 
 export const _generalAppStateActions = new ActionEntity({
   turnOnButtonSelection(buttonSelection: ButtonSelection) {
-    _generalAppState.adaptParticleSetter("buttonSelections")(buttonSelection);
+    $generalAppState.adaptParticleSetter("buttonSelections")(buttonSelection);
   },
   resetButtonSelection() {
-    _generalAppState.adaptParticleSetter("buttonSelections")("select");
+    $generalAppState.adaptParticleSetter("buttonSelections")("select");
   },
 });

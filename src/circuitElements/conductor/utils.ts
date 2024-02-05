@@ -1,8 +1,8 @@
-import { ConductorPreviewCoordinates } from "@/stateEntities/generalElementData";
+import { ConductorPreviewCoordinates } from "@/stateEntities/generalCircuitElementData";
 import {
   ConductorConnectionPoints,
-  _elementConnectionPointsActions,
-} from "@/stateEntities/elementConnectionPoints";
+  _circuitElementConnectionPointsActions,
+} from "@/stateEntities/circuitElementConnectionPoints";
 import { Conductor, ConductorOrientation } from "./Conductor";
 import { conductorBodyDimensions } from "./dimensions";
 
@@ -14,13 +14,16 @@ export function addConductorConnectionPoints(conductor: Conductor) {
   const conductorEndGlobalConnectionPoint = conductor.toGlobal(
     conductor.conductorEndLocalConnectionPoint!,
   );
-  _elementConnectionPointsActions.dispatch("addConductorConnectionPoints", {
-    id: conductor.id,
-    connectionPoints: [
-      conductorOriginGlobalConnectionPoint,
-      conductorEndGlobalConnectionPoint,
-    ],
-  });
+  _circuitElementConnectionPointsActions.dispatch(
+    "addConductorConnectionPoints",
+    {
+      id: conductor.id,
+      connectionPoints: [
+        conductorOriginGlobalConnectionPoint,
+        conductorEndGlobalConnectionPoint,
+      ],
+    },
+  );
 }
 
 export function conductorSizeIsValid(

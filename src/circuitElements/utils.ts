@@ -2,11 +2,11 @@ import { Graphics, IPointData } from "pixi.js";
 import { CircuitElement } from "./CircuitElement";
 import {
   ConnectionPoints,
-  _conductorConnectionPointsCollection,
-  _elementConnectionPointsActions,
-  _inputConnectionPointsCollection,
-  _outputConnectionPointsCollection,
-} from "@/stateEntities/elementConnectionPoints";
+  $conductorConnectionPointsCollection,
+  $inputConnectionPointsCollection,
+  $outputConnectionPointsCollection,
+  _circuitElementConnectionPointsActions,
+} from "@/stateEntities/circuitElementConnectionPoints";
 import { Conductor } from "./conductor/Conductor";
 import { CircuitElementId } from "@/stateEntities/utils";
 import { round } from "@/engines/visualization/utils";
@@ -27,7 +27,7 @@ export function addInputConnectionPoint(
   connectionPoint: IPointData,
 ) {
   const globalConnectionPoint = circuitElement.toGlobal(connectionPoint);
-  _elementConnectionPointsActions.dispatch("addInputConnectionPoint", {
+  _circuitElementConnectionPointsActions.dispatch("addInputConnectionPoint", {
     id: circuitElement.id,
     connectionPoint: globalConnectionPoint,
   });
@@ -38,7 +38,7 @@ export function addOutputConnectionPoint(
   connectionPoint: IPointData,
 ) {
   const globalConnectionPoint = circuitElement.toGlobal(connectionPoint);
-  _elementConnectionPointsActions.dispatch("addOutputConnectionPoint", {
+  _circuitElementConnectionPointsActions.dispatch("addOutputConnectionPoint", {
     id: circuitElement.id,
     connectionPoint: globalConnectionPoint,
   });
@@ -65,7 +65,7 @@ export function inputConnectionPointIsBeingHoveredOver(
   circuitElement: CircuitElement,
   hoverPoint: IPointData,
 ) {
-  const connectionPoints = _inputConnectionPointsCollection.adaptParticle(
+  const connectionPoints = $inputConnectionPointsCollection.adaptParticle(
     circuitElement.id,
   )![0]();
 
@@ -76,7 +76,7 @@ export function outputConnectionPointIsBeingHoveredOver(
   circuitElement: CircuitElement,
   hoverPoint: IPointData,
 ) {
-  const connectionPoints = _outputConnectionPointsCollection.adaptParticle(
+  const connectionPoints = $outputConnectionPointsCollection.adaptParticle(
     circuitElement.id,
   )![0]();
 
@@ -87,7 +87,7 @@ export function conductorConnectionPointIsBeingHoveredOver(
   conductor: Conductor,
   hoverPoint: IPointData,
 ) {
-  const connectionPoints = _conductorConnectionPointsCollection.adaptParticle(
+  const connectionPoints = $conductorConnectionPointsCollection.adaptParticle(
     conductor.id,
   )![0]();
 
@@ -98,11 +98,11 @@ export function checkForCollisionWithConductorConnectionPoint(
   checkPoint: IPointData,
 ) {
   const conductorConnectionPointsIds = Object.keys(
-    _conductorConnectionPointsCollection.adaptParticleValues(),
+    $conductorConnectionPointsCollection.adaptParticleValues(),
   ) as CircuitElementId[];
   for (let i = 0; i < conductorConnectionPointsIds.length; i++) {
     const conductorConnectionPointsId = conductorConnectionPointsIds[i];
-    const connectionPoints = _conductorConnectionPointsCollection.adaptParticle(
+    const connectionPoints = $conductorConnectionPointsCollection.adaptParticle(
       conductorConnectionPointsId,
     )![0]();
     for (let j = 0; j < connectionPoints.length; j++) {
