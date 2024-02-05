@@ -53,12 +53,12 @@ type PreparedCircuitElementOptions = {
 
 export class VisualizationEngine {
   connectionPointIsBeingHoveredOver = unify(adaptState(false));
-  connectionPointSelectionCircle = new Graphics();
   connectionPointSelectionCirclePosition = unify(adaptState({ x: 0, y: 0 }));
+  connectionPointSelectionCircle = new Graphics();
   dragOrigin: IPointData = { x: 0, y: 0 }; // for tracking the beginning position of the mouse pointer when dragging
-  dragTarget?: CircuitElement | null; // for tracking the current `DisplayObject` being dragged
+  dragTarget: CircuitElement | null = null; // for tracking the current `DisplayObject` being dragged
   dragTargetOrigin: IPointData = { x: 0, y: 0 }; // for tracking the beginning position of the `dragTarget` when dragging
-  hoverTarget?: CircuitElement | null;
+  hoverTarget: CircuitElement | null = null;
   currentPreparedCircuitElementOptions: PreparedCircuitElementOptions = null;
   renderer: Renderer = new Renderer();
   stage: Container = new Container();
@@ -153,7 +153,7 @@ export class VisualizationEngine {
     }
   }
 
-  protected spawnCurrentPreparedCircuitElement({
+  protected conditionallySpawnCurrentPreparedCircuitElement({
     position,
     offset,
   }: {
@@ -191,14 +191,14 @@ export class VisualizationEngine {
         type: "conductor",
         globalConnectionPoints: globalConnectionPoints_1,
       });
-      this.spawnCurrentPreparedCircuitElement({
+      this.conditionallySpawnCurrentPreparedCircuitElement({
         position: globalConnectionPoints_1[0],
       });
       _circuitElementActions.dispatch("prepareToAddCircuitElement", {
         type: "conductor",
         globalConnectionPoints: globalConnectionPoints_2,
       });
-      this.spawnCurrentPreparedCircuitElement({
+      this.conditionallySpawnCurrentPreparedCircuitElement({
         position: globalConnectionPoints_2[0],
       });
     }
@@ -230,10 +230,15 @@ export class VisualizationEngine {
       gridGap,
     });
 
-    this.initEventListeners(grid);
     this.initConnectionPointSelectionCircle();
     this.initConductorPreview();
+    this.initEventListeners(grid);
     this.initTicker();
+  }
+
+  protected initConductorPreview() {
+    Conductor.buildConductorPreview();
+    this.stage.addChild(Conductor.conductorPreview);
   }
 
   protected initConnectionPointSelectionCircle() {
@@ -241,11 +246,6 @@ export class VisualizationEngine {
     this.connectionPointSelectionCircle.eventMode = "static";
     this.connectionPointSelectionCircle.cursor = "pointer";
     this.stage.addChild(this.connectionPointSelectionCircle);
-  }
-
-  protected initConductorPreview() {
-    Conductor.buildConductorPreview();
-    this.stage.addChild(Conductor.conductorPreview);
   }
 
   protected initEventListeners(grid: Grid) {
@@ -311,14 +311,25 @@ export class VisualizationEngine {
       undefined,
     );
     this.prepareToDragTarget(e);
-    this.spawnCurrentPreparedCircuitElement({ position: e, offset: true });
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "other" || clickMode === "select") {
+    this.conditionallySpawnCurrentPreparedCircuitElement({
+      position: e,
+      offset: true,
+    });
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "other" || mode === "select") {
       _generalAppStateActions.dispatch("resetButtonSelection", undefined);
     } else {
       _generalAppStateActions.dispatch("turnOnButtonSelection", "simulate");
     }
     this.conditionallyInitDrawingOfConductorPreviewVisuals(e);
+  }
+
+  protected onPointerMove(e: PointerEvent) {
+    this.conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(e);
+    if (!this.hoverTarget) {
+      this.connectionPointIsBeingHoveredOver(false);
+    }
+    this.hoverTarget = null;
   }
 
   protected onPointerUp() {
@@ -329,14 +340,6 @@ export class VisualizationEngine {
       startingCoordinates: null,
       isBeingDrawn: false,
     });
-  }
-
-  protected onPointerMove(e: PointerEvent) {
-    this.conditionallyDrawConductorPreviewVisualsOrMoveDragTarget(e);
-    if (!this.hoverTarget) {
-      this.connectionPointIsBeingHoveredOver(false);
-    }
-    this.hoverTarget = null;
   }
 
   prepareToAddCircuitElement({

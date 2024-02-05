@@ -205,9 +205,34 @@ export class Conductor extends CircuitElement {
     }
   }
 
-  detonate() {
+  protected initConductorBody() {
+    this.buildConductorBody();
+    this.addChild(this.conductorBody);
+  }
+
+  protected onPointerDown = () => {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
+      this.genericOnPointerDownFunctionality();
+    }
+  };
+
+  protected onPointerMove = (e: PointerEvent) => {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
+      this.genericOnPointerMoveFunctionality(e);
+    }
+  };
+
+  protected onPointerUp = () => {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
+      this.genericOnPointerUpFunctionality();
+    }
+  };
+
+  specificDetonateFunctionality() {
     this.conductorBody.destroy();
-    this.genericDetonateFunctionality();
   }
 
   specificInitFunctionality() {
@@ -215,33 +240,4 @@ export class Conductor extends CircuitElement {
     this.addConductorConnectionPoints();
     this.initConductorBody();
   }
-
-  protected initConductorBody() {
-    this.buildConductorBody();
-    this.addChild(this.conductorBody);
-  }
-
-  protected onPointerDown = () => {
-    const simulatorClickMode =
-      $derivedAppState.adaptDerivativeValue("clickMode");
-    if (simulatorClickMode === "select") {
-      this.genericOnPointerDownFunctionality();
-    }
-  };
-
-  protected onPointerMove = (e: PointerEvent) => {
-    const simulatorClickMode =
-      $derivedAppState.adaptDerivativeValue("clickMode");
-    if (simulatorClickMode === "select") {
-      this.genericOnPointerMoveFunctionality(e);
-    }
-  };
-
-  protected onPointerUp = () => {
-    const simulatorClickMode =
-      $derivedAppState.adaptDerivativeValue("clickMode");
-    if (simulatorClickMode === "select") {
-      this.genericOnPointerUpFunctionality();
-    }
-  };
 }

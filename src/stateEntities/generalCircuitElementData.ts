@@ -87,11 +87,10 @@ export const _generalCircuitElementDataActions = new ActionEntity({
     });
   },
   resetCircuitElementSelections() {
-    const setCircuitElementSelections =
-      $generalCircuitElementData.adaptParticleSetter(
-        "circuitElementSelections",
-      );
-    setCircuitElementSelections([]);
+    const [circuitElementSelections, setCircuitElementSelections] =
+      $generalCircuitElementData.adaptParticle("circuitElementSelections");
+    // only reset if there are `circuitElementSelections` present
+    circuitElementSelections().length && setCircuitElementSelections([]);
   },
   changeCircuitElementPosition({
     id,

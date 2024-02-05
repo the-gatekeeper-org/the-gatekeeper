@@ -1,33 +1,35 @@
 import { html } from "lit";
-import { classMap } from "lit/directives/class-map.js";
 import {
   $generalAppState,
   ButtonSelection,
 } from "@/stateEntities/generalAppState";
+import "@shoelace-style/shoelace/dist/components/tooltip/tooltip.js";
+import "@shoelace-style/shoelace/dist/components/icon/icon.js";
+import "@shoelace-style/shoelace/dist/components/button/button.js";
 
 function Button(props: {
-  type?: "primary" | "secondary";
-  text: string;
+  tooltipText: string;
   onClick: (id: ButtonSelection) => void;
   id: ButtonSelection;
+  icon: string;
 }) {
   return () => {
     const isSelected =
       props.id === $generalAppState.adaptParticleValue("buttonSelections");
-    const variants = classMap({
-      "bg-secondary-dark border border-primary-dark hover:scale-105":
-        props.type === undefined || props.type === "primary",
-      "hover:bg-btn-secondary-dark": props.type === "secondary",
-      "bg-btn-secondary-dark": isSelected,
-    });
 
     return html`
-      <button
-        class="w-primary-button h-primary-button rounded-md flex items-center justify-center mr-1 last-of-type:mr-0 ${variants}"
-        @click=${props.onClick}
-      >
-        ${props.text}
-      </button>
+      <sl-tooltip content=${props.tooltipText}>
+        <sl-button
+          variant=${isSelected ? "primary" : "text"}
+          @click=${() => props.onClick(props.id)}
+          circle
+          ><sl-icon
+            src="/icons/${props.icon}.svg"
+            label=${props.tooltipText}
+            class=${!isSelected ? "text-primary-dark" : ""}
+          ></sl-icon
+        ></sl-button>
+      </sl-tooltip>
     `;
   };
 }

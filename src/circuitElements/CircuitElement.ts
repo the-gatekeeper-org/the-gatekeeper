@@ -69,7 +69,12 @@ export abstract class CircuitElement extends Container {
     this.addChild(this.selectionRectangle);
   }
 
-  abstract detonate(): void;
+  detonate() {
+    this.specificDetonateFunctionality();
+    this.selectionRectangle.destroy();
+    this.destroy();
+    this.cleanup?.();
+  }
 
   protected genericBuildSelectionRectangleFunctionality(strokeWidth: number) {
     this.selectionRectangle.clear();
@@ -85,12 +90,6 @@ export abstract class CircuitElement extends Container {
       }
     }
     this.selectionRectangle.beginFill(bg["primary-dark"], 0.01);
-  }
-
-  protected genericDetonateFunctionality() {
-    this.selectionRectangle.destroy();
-    this.destroy();
-    this.cleanup?.();
   }
 
   protected genericOnPointerDownFunctionality() {
@@ -122,6 +121,8 @@ export abstract class CircuitElement extends Container {
   protected abstract onPointerMove(e: PointerEvent): void;
 
   protected abstract onPointerUp(): void;
+
+  abstract specificDetonateFunctionality(): void;
 
   abstract specificInitFunctionality(): void;
 }

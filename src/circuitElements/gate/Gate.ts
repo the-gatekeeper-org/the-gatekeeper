@@ -206,13 +206,6 @@ export class Gate extends CircuitElement {
     }
   }
 
-  detonate() {
-    this.gateBody.destroy();
-    this.inputTerminals.destroy();
-    this.outputTerminal.destroy();
-    this.genericDetonateFunctionality();
-  }
-
   protected getOutputTerminalLocalConnectionPoint() {
     const gateType = $circuitElementTypes.adaptParticle(this.id)![0]();
     const circle_Y = gateType === "not" ? "midPoint_Y_not" : "midPoint_Y";
@@ -221,6 +214,12 @@ export class Gate extends CircuitElement {
       outputTerminalDimensions[`delta_X_${gateType as GateType}`];
     const y = gateBodyDimensions[circle_Y];
     return { x, y };
+  }
+
+  specificDetonateFunctionality() {
+    this.gateBody.destroy();
+    this.inputTerminals.destroy();
+    this.outputTerminal.destroy();
   }
 
   specificInitFunctionality() {
@@ -242,22 +241,22 @@ export class Gate extends CircuitElement {
   }
 
   protected onPointerDown = () => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerDownFunctionality();
     }
   };
 
   protected onPointerMove = (e: PointerEvent) => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
   };
 
   protected onPointerUp = () => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerUpFunctionality();
       // TODO: find a better way to achieve this
       // use `setTimeout` to ensure that operation runs only after all new conductors have been spawned from existing `conductorPreviews`

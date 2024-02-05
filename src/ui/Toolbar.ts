@@ -2,93 +2,110 @@ import { h } from "promethium-js";
 import { html } from "lit";
 import { map } from "lit/directives/map.js";
 import Button from "./Button";
-import { _generalAppStateActions } from "@/stateEntities/generalAppState";
+import {
+  ButtonSelection,
+  _generalAppStateActions,
+} from "@/stateEntities/generalAppState";
 import { _circuitElementActions } from "@/circuitElements/actions";
+import { CircuitElementType } from "@/stateEntities/generalCircuitElementData";
 
 const buttons: Parameters<typeof Button>[0][] = [
   {
-    text: "S",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "select");
+    tooltipText: "Select",
+    icon: "cursor",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
     },
     id: "select",
   },
   {
-    text: "Q",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "simulate");
+    tooltipText: "Simulate",
+    icon: "hand-index-thumb",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
     },
     id: "simulate",
   },
   {
-    text: "I",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "input");
-      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
-        type: "input",
-      });
+    tooltipText: "Wire",
+    icon: "bounding-box",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
     },
-    id: "input",
+    id: "wire",
   },
   {
-    text: "Y",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "output");
+    tooltipText: "And",
+    icon: "and-gate",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
       _circuitElementActions.dispatch("prepareToAddCircuitElement", {
-        type: "output",
-      });
-    },
-    id: "output",
-  },
-  {
-    text: "A",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "and");
-      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
-        type: "and",
+        type: id as CircuitElementType,
       });
     },
     id: "and",
   },
   {
-    text: "O",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "or");
+    tooltipText: "Not",
+    icon: "not-gate",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
       _circuitElementActions.dispatch("prepareToAddCircuitElement", {
-        type: "or",
+        type: id as CircuitElementType,
+      });
+    },
+    id: "not",
+  },
+  {
+    tooltipText: "Or",
+    icon: "or-gate",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
+        type: id as CircuitElementType,
       });
     },
     id: "or",
   },
   {
-    text: "N",
-    onClick: () => {
-      _generalAppStateActions.dispatch("turnOnButtonSelection", "not");
+    tooltipText: "Input",
+    icon: "info-square",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
       _circuitElementActions.dispatch("prepareToAddCircuitElement", {
-        type: "not",
+        type: id as CircuitElementType,
       });
     },
-    id: "not",
+    id: "input",
+  },
+  {
+    tooltipText: "Output",
+    icon: "info-circle",
+    onClick: (id: ButtonSelection) => {
+      _generalAppStateActions.dispatch("turnOnButtonSelection", id);
+      _circuitElementActions.dispatch("prepareToAddCircuitElement", {
+        type: id as CircuitElementType,
+      });
+    },
+    id: "output",
   },
 ];
 
 function Toolbar() {
   return () => html`
-    <div class="absolute top-main left-main flex w-toolbar justify-between">
-      ${h(Button, { type: "primary", text: "M", onClick() {}, id: "select" })}
+    <div class="w-full flex justify-center items-center">
       <div
-        class="bg-secondary-dark border border-primary-dark rounded-md flex items-center p-1 px-2"
+        class="absolute bottom-main border border-primary-dark rounded-full px-2 py-2"
       >
         ${map(buttons, (props) =>
           h(Button, {
-            type: "secondary",
-            text: props.text,
-            onClick: () => props.onClick?.(props.id),
+            tooltipText: props.tooltipText,
+            icon: props.icon,
+            onClick: () => props.onClick(props.id),
             id: props.id,
           }),
         )}
       </div>
-      ${h(Button, { type: "primary", text: "?", onClick() {}, id: "select" })}
     </div>
   `;
 }

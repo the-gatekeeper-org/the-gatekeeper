@@ -2,6 +2,7 @@ import { ActionEntity, DerivativeEntity, ParticleEntity } from "promethium-js";
 
 export type ButtonSelection =
   | "select"
+  | "wire"
   | "simulate"
   | "input"
   | "output"
@@ -14,10 +15,14 @@ export const $generalAppState = new ParticleEntity({
 });
 
 export const $derivedAppState = new DerivativeEntity({
-  clickMode: () => {
+  mode() {
     const buttonSelection =
       $generalAppState.adaptParticleValue("buttonSelections");
-    if (buttonSelection === "select" || buttonSelection === "simulate") {
+    if (
+      buttonSelection === "select" ||
+      buttonSelection === "wire" ||
+      buttonSelection === "simulate"
+    ) {
       return buttonSelection;
     } else {
       return "other";

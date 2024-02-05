@@ -130,10 +130,9 @@ export class Input extends CircuitElement {
     }
   }
 
-  detonate() {
+  specificDetonateFunctionality() {
     this.inputBody.destroy();
     this.outputTerminal.destroy();
-    this.genericDetonateFunctionality();
   }
 
   specificInitFunctionality() {
@@ -159,24 +158,24 @@ export class Input extends CircuitElement {
   }
 
   protected onPointerDown = () => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerDownFunctionality();
-    } else if (clickMode === "simulate") {
+    } else if (mode === "simulate") {
       _simulationDataActions.dispatch("toggleInputValue", this.id);
     }
   };
 
   protected onPointerMove = (e: PointerEvent) => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
   };
 
   protected onPointerUp = () => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerUpFunctionality();
       const connectionPoints = $outputConnectionPointsCollection.adaptParticle(
         this.id,

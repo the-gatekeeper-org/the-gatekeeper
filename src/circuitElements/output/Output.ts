@@ -136,10 +136,9 @@ export class Output extends CircuitElement {
     }
   }
 
-  detonate() {
+  specificDetonateFunctionality() {
     this.outputBody.destroy();
     this.inputTerminal.destroy();
-    this.genericDetonateFunctionality();
   }
 
   specificInitFunctionality() {
@@ -165,22 +164,22 @@ export class Output extends CircuitElement {
   }
 
   protected onPointerDown = () => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerDownFunctionality();
     }
   };
 
   protected onPointerMove = (e: PointerEvent) => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerMoveFunctionality(e);
     }
   };
 
   protected onPointerUp = () => {
-    const clickMode = $derivedAppState.adaptDerivativeValue("clickMode");
-    if (clickMode === "select") {
+    const mode = $derivedAppState.adaptDerivativeValue("mode");
+    if (mode === "select") {
       this.genericOnPointerUpFunctionality();
       const connectionPoints = $inputConnectionPointsCollection.adaptParticle(
         this.id,

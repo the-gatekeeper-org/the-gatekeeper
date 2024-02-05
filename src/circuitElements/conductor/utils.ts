@@ -84,5 +84,5 @@ export function getConductorDirectionFromConnectionPoints(
       ? Math.sign(connectionPoints[1].x - connectionPoints[0].x)
       : Math.sign(connectionPoints[1].y - connectionPoints[0].y);
 
-  return direction;
+  return direction as -1 | 1;
 }

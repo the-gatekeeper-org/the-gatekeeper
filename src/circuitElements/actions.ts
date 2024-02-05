@@ -1,8 +1,8 @@
 import { ActionEntity, adaptMemo } from "promethium-js";
 import {
+  CircuitElementType,
   $circuitElementTypes,
   $circuitElementInstances,
-  CircuitElementType,
   $circuitElementPositions,
   _generalCircuitElementDataActions,
 } from "@/stateEntities/generalCircuitElementData";
@@ -70,7 +70,7 @@ export const _circuitElementActions = new ActionEntity({
     );
   },
   removeCircuitElement(id: CircuitElementId) {
-    // remove any possible references to element on `visualizationEngine`
+    // remove any possible references to circuit element on `visualizationEngine`
     visualizationEngine.dragTarget = null;
     $circuitElementTypes.deleteParticle(id);
     $inputConnectionPointsCollection.deleteParticle(id);
@@ -82,7 +82,6 @@ export const _circuitElementActions = new ActionEntity({
     $circuitElementPositions.deleteParticle(id);
     $nodeInputsCollection.deleteParticles([id]);
     $nodeOutputsCollection.deleteDerivatives([id]);
-    // TODO: move out of here
     _generalCircuitElementDataActions.dispatch(
       "resetCircuitElementSelections",
       undefined,

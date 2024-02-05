@@ -5,6 +5,11 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "plugins": [
+      {
+        "name": "ts-lit-plugin"
+      }
+    ],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
