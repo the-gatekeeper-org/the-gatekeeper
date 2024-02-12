@@ -9,6 +9,11 @@ import {
 } from "@/stateEntities/generalCircuitElementData";
 import { bg, border } from "@/ui/colors";
 
+export const circuitElementInstances: Record<
+  CircuitElementId,
+  CircuitElement | undefined
+> = {};
+
 export type CircuitElementOptions = {
   visualizationEngine: VisualizationEngine;
   id: CircuitElementId;

@@ -1,5 +1,4 @@
 import { Container, Graphics, IPointData, Renderer, Ticker } from "pixi.js";
-import { Gate } from "@/circuitElements/gate/Gate";
 import { bg, border } from "@/ui/colors";
 import { Grid, GridOptions } from "@/engines/visualization/grid/Grid";
 import { adaptEffect, adaptState, unify } from "promethium-js";
@@ -7,7 +6,6 @@ import {
   connectionPointSelectionCircleDimensions,
   gridGap,
 } from "./dimensions";
-import { Conductor } from "@/circuitElements/conductor/Conductor";
 import { round } from "./utils";
 import {
   $generalCircuitElementData,
@@ -16,34 +14,38 @@ import {
 } from "@/stateEntities/generalCircuitElementData";
 import { ConductorConnectionPoints } from "@/stateEntities/circuitElementConnectionPoints";
 import { CircuitElement } from "@/circuitElements/CircuitElement";
-import { Input } from "@/circuitElements/input/Input";
-import { Output } from "@/circuitElements/output/Output";
 import {
   $derivedAppState,
   _generalAppStateActions,
 } from "@/stateEntities/generalAppState";
 import { CircuitElementId } from "@/stateEntities/utils";
 import { _circuitElementActions } from "@/circuitElements/actions";
+import { Gate } from "@/circuitElements/gate/Gate";
+import { Input } from "@/circuitElements/input/Input";
+import { Output } from "@/circuitElements/output/Output";
+import { Conductor } from "@/circuitElements/conductor/Conductor";
+
+export const circuitElementClasses: Record<
+  CircuitElementType,
+  typeof CircuitElement
+> = {
+  and: Gate,
+  or: Gate,
+  not: Gate,
+  nand: Gate,
+  nor: Gate,
+  xor: Gate,
+  xnor: Gate,
+  input: Input,
+  output: Output,
+  conductor: Conductor,
+  blackBox: Gate,
+};
 
 interface GlobalThis {
   __PIXI_STAGE__: Container;
   __PIXI_RENDERER__: Renderer;
 }
-
-const circuitElementClasses: Record<CircuitElementType, typeof CircuitElement> =
-  {
-    and: Gate,
-    or: Gate,
-    not: Gate,
-    nand: Gate,
-    nor: Gate,
-    xor: Gate,
-    xnor: Gate,
-    input: Input,
-    output: Output,
-    conductor: Conductor,
-    blackBox: Gate,
-  };
 
 type PreparedCircuitElementOptions = {
   id: CircuitElementId;

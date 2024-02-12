@@ -2,7 +2,6 @@ import { ActionEntity, adaptMemo } from "promethium-js";
 import {
   CircuitElementType,
   $circuitElementTypes,
-  $circuitElementInstances,
   $circuitElementPositions,
   _generalCircuitElementDataActions,
 } from "@/stateEntities/generalCircuitElementData";
@@ -12,7 +11,7 @@ import {
   $inputConnectionPointsCollection,
   $outputConnectionPointsCollection,
 } from "@/stateEntities/circuitElementConnectionPoints";
-import { CircuitElement } from "./CircuitElement";
+import { CircuitElement, circuitElementInstances } from "./CircuitElement";
 import {
   CircuitElementId,
   generateCircuitElementId,
@@ -51,7 +50,7 @@ export const _circuitElementActions = new ActionEntity({
       $inputConnectionPointsCollection.createParticle(id, []);
       $outputConnectionPointsCollection.createParticle(id, []);
     }
-    $circuitElementInstances.createParticle(id, instance);
+    circuitElementInstances[id] = instance;
     $circuitElementPositions.createParticle(id, position);
     $nodeInputsCollection.createParticle(id, type === "input" ? [0] : []);
     $nodeOutputsCollection.createDerivative(
@@ -76,9 +75,9 @@ export const _circuitElementActions = new ActionEntity({
     $inputConnectionPointsCollection.deleteParticle(id);
     $outputConnectionPointsCollection.deleteParticle(id);
     $conductorConnectionPointsCollection.deleteParticle(id);
-    const element = $circuitElementInstances.adaptParticleValue(id)!;
+    const element = circuitElementInstances[id]!;
     element.detonate();
-    $circuitElementInstances.deleteParticle(id);
+    circuitElementInstances[id] = undefined;
     $circuitElementPositions.deleteParticle(id);
     $nodeInputsCollection.deleteParticles([id]);
     $nodeOutputsCollection.deleteDerivatives([id]);

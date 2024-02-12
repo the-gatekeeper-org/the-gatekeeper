@@ -1,7 +1,6 @@
 import { ActionEntity, ParticleEntity } from "promethium-js";
 import { CircuitElementId } from "./utils";
 import { GateType } from "@/circuitElements/gate/Gate";
-import { CircuitElement } from "@/circuitElements/CircuitElement";
 import { IPointData } from "pixi.js";
 import { round } from "@/engines/visualization/utils";
 
@@ -14,10 +13,6 @@ export type CircuitElementType =
 
 export const $circuitElementTypes = new ParticleEntity<
   Record<CircuitElementId, CircuitElementType>
->({});
-
-export const $circuitElementInstances = new ParticleEntity<
-  Record<CircuitElementId, CircuitElement>
 >({});
 
 export const $circuitElementPositions = new ParticleEntity<
